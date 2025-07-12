@@ -1,6 +1,7 @@
 #include "BattleScene.h"
-#include "GameController.h"
+#include "GameControllerMode1.h"
 #include "SpriteSheetManager.h"
+#include "Robot.h"
 
 #include <QPainter>
 #include <QDebug>
@@ -16,10 +17,10 @@ void BattleScene::setPlayer(Player* p) {
     player = p;
 }
 
-void BattleScene::setup(GameMode mode) {
+void BattleScene::setController(IGameController* c) {
     if (controller) delete controller;
-    controller = new GameController();
-    controller->initialize(mode, this);
+    controller = c;
+    if (controller) controller->initialize(this);
 }
 
 void BattleScene::paintEvent(QPaintEvent*) {
@@ -38,7 +39,6 @@ void BattleScene::paintEvent(QPaintEvent*) {
                 case 1: frameKey = "brick_1"; break;  // wall
                 case 2: frameKey = "brick_2"; break;  // hard block
                 case 3: frameKey = ((x + y) % 2 == 0) ? "brick_3_0" : "brick_3_1"; break;
-                case 5: frameKey =  "R_stand_down_1"; break;
                 case 6: frameKey = "brick_6"; break;
                 case 7: frameKey = "brick_7"; break;
                 default: frameKey = "brick_0"; break;
@@ -54,9 +54,10 @@ void BattleScene::paintEvent(QPaintEvent*) {
     }
 
     // 玩家角色圖
-    if (player) {
-        QPointF pos = player->getPosition();
-        QRect rect(pos.x() * cellSize, pos.y() * cellSize, cellSize, cellSize);
+    if (controller && controller->getPlayer()) {
+        player = controller->getPlayer();
+        QPointF pos = player->getScreenPos();
+        QRect rect(pos.x(), pos.y(), cellSize, cellSize);
 
         QString directionStr;
         switch (player->getDirection()) {
@@ -76,12 +77,18 @@ void BattleScene::paintEvent(QPaintEvent*) {
             painter.drawEllipse(rect);
         }
     }
+    if (controller) {
+        for (Robot* r : controller->getRobots()) {
+            QPointF pos = r->getScreenPos();
+            QRect rect(pos.x(), pos.y(), cellSize, cellSize);
+            QString key = r->getCurrentSprite();
+            QPixmap sprite = SpriteSheetManager::instance().getFrame(key);
+            painter.drawPixmap(rect, sprite);
+        }
+    }
+
 }
 
-void BattleScene::addRobot(Robot* r) {
-    robots.append(r);
-    update();
-}
 
 void BattleScene::addMonster(Monster* m) {
     monsters.append(m);

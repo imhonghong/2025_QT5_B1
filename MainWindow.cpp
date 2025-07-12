@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include <QMessageBox>
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -25,8 +26,14 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 void MainWindow::startGame(GameMode mode) {
-    battleScene->setup(mode);
-    stack->setCurrentWidget(battleScene);
+    if (mode == GameMode::Mode1) {
+        IGameController* controller = new GameControllerMode1();
+        battleScene->setController(controller);
+        stack->setCurrentWidget(battleScene);
+    } else {
+        QMessageBox::information(this, "模式尚未實作", "Mode 2 尚未實作！");
+        stack->setCurrentWidget(titleScene);
+    }
 }
 
 void MainWindow::backToTitle() {

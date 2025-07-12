@@ -4,7 +4,7 @@
 #include "TitleScene.h"
 #include "BattleScene.h"
 #include "EndingScene.h"
-#include "GameController.h"
+#include "GameControllerMode1.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT

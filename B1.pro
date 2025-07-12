@@ -11,7 +11,7 @@ CONFIG += c++11
 SOURCES += \
     BattleScene.cpp \
     EndingScene.cpp \
-    GameController.cpp \
+    GameControllerMode1.cpp \
     MapLoader.cpp \
     Monster.cpp \
     Octopus.cpp \
@@ -26,8 +26,9 @@ HEADERS += \
     BattleScene.h \
     Character.h \
     EndingScene.h \
-    GameController.h \
+    GameControllerMode1.h \
     GameMode.h \
+    IGameController.h \
     MainWindow.h \
     MapLoader.h \
     Monster.h \

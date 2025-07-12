@@ -5,8 +5,8 @@
 
 #include "Player.h"
 #include "GameMode.h"
-#include "Robot.h"
 #include "Monster.h"
+#include "IGameController.h"
 
 class BattleScene : public QWidget {
     Q_OBJECT
@@ -15,9 +15,8 @@ public:
 
     void setMap(const QVector<QVector<int>>& map);
     void setPlayer(Player* player);
-    void setup(GameMode mode);
+    void setController(IGameController* c);
 
-    void addRobot(Robot* robot);
     void addMonster(Monster* monster);
 
 
@@ -31,7 +30,6 @@ signals:
 private:
     QVector<QVector<int>> mapData;
     Player* player = nullptr;
-    GameController* controller = nullptr;
-    QVector<Robot*> robots;
+    IGameController* controller = nullptr;
     QVector<Monster*> monsters;
 };

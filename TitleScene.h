@@ -2,7 +2,7 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QVBoxLayout>
-#include "GameController.h"
+#include "GameControllerMode1.h"
 
 class TitleScene : public QWidget {
     Q_OBJECT

@@ -1,26 +1,17 @@
 #pragma once
 
 #include <QObject>
-#include <QPointF>
-#include "GameMode.h"
+#include "Character.h"
 
-class GameController;
+class IGameController;
 
-class Player {
+class Player : public Character {
 public:
     Player();
 
-    void setController(GameController* controller);
-    void setPosition(float x, float y);
-    void setDirection(int dir); // 0:up, 1:down, 2:left, 3:right
-
-    QPointF getPosition() const;
-    int getDirection() const;
-
-    void update(float delta); // update movement logic
+    void setController(IGameController* controller);
+    void update(float delta);
 
 private:
-    GameController* controller = nullptr;
-    QPointF position; // float position for smooth movement
-    int direction = 0;
+    IGameController* controller = nullptr;
 };
