@@ -1,11 +1,12 @@
 #pragma once
 #include "Character.h"
 #include "SpriteSheetManager.h"
-#include "BattleScene.h"
 
 #include <QVector>
 #include <QPoint>
 
+class BattleScene;
+class IGameController;
 enum class RobotAction {
     MoveTo,
     PlaceBomb,

@@ -3,8 +3,8 @@
 #include <QVector>
 #include <QPoint>
 #include "Player.h"
-#include "Robot.h"
 #include "GameMode.h"
+#include "Robot.h"
 
 class BattleScene;
 class IGameController {

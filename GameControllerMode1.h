@@ -2,6 +2,7 @@
 
 #include "IGameController.h"
 #include "BattleScene.h"
+#include "Robot.h"
 #include "MapLoader.h"
 
 class GameControllerMode1 : public IGameController {
