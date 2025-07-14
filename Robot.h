@@ -31,6 +31,7 @@ public:
 
     void generatePlan(const QVector<QVector<int>>& map, const QPoint& playerPos);
     void advanceStep();
+    void generateTestPlan(); //only for testing
 
     bool isFinished() const;
     void reset();

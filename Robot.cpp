@@ -37,7 +37,9 @@ void Robot::generatePlan(const QVector<QVector<int>>& map, const QPoint& playerP
 }
 
 void Robot::advanceStep() {
+
     if (stepIndex >= plan.size()) return;
+    qDebug() << "[Robot] stepIndex =" << stepIndex << "計畫總長:" << plan.size();
 
     Step current = plan[stepIndex];
 
@@ -94,3 +96,14 @@ QPixmap Robot::getCurrentPixmap() const {
     return SpriteSheetManager::instance().getFrame(frameKey);
 }
 
+void Robot::generateTestPlan(){
+    qDebug() << "[Robot] generateTestPlan 被呼叫！";
+    QPoint p0 = getGridPos();
+    QPoint p1 = p0 + QPoint(1, 0);  // 右邊
+    plan = {
+        { RobotAction::MoveTo, p1 },
+        { RobotAction::PlaceBomb, p1 },
+        { RobotAction::MoveTo, p0 },
+        { RobotAction::Wait, p0, 3 }
+    };
+}

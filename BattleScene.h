@@ -2,12 +2,14 @@
 
 #include <QWidget>
 #include <QVector>
+#include <QTimer>
 
 #include "Player.h"
 #include "GameMode.h"
 #include "Monster.h"
 #include "IGameController.h"
 #include "WaterBomb.h"
+#include "Explosion.h"
 
 class BattleScene : public QWidget {
     Q_OBJECT
@@ -35,4 +37,7 @@ private:
     IGameController* controller = nullptr;
     QVector<Monster*> monsters;
     QVector<WaterBomb*> waterBombs;
+    QVector<Explosion*> explosions;
+
+    QTimer updateTimer;
 };

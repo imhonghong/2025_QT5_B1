@@ -27,7 +27,7 @@ void WaterBomb::tick() {
 
 QPixmap WaterBomb::getCurrentPixmap() const {
     if (hasExploded) {
-        return SpriteSheetManager::instance().getFrame("WB_center_4");
+         return QPixmap();
     }
     return SpriteSheetManager::instance().getFrame(QString("WB_%1").arg(currentFrame));
 }

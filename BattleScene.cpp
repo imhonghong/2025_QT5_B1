@@ -21,6 +21,13 @@ void BattleScene::setController(IGameController* c) {
     if (controller) delete controller;
     controller = c;
     if (controller) controller->initialize(this);
+
+    // ✅ 新增以下
+    connect(&updateTimer, &QTimer::timeout, this, [=](){
+        if (controller) controller->update(0.016f);  // 假設約 60fps
+        update();  // 強制重繪畫面
+    });
+    updateTimer.start(16);  // 每 16ms 執行一次
 }
 
 void BattleScene::paintEvent(QPaintEvent*) {
@@ -86,13 +93,28 @@ void BattleScene::paintEvent(QPaintEvent*) {
             painter.drawPixmap(rect, sprite);
         }
     }
-
-    // ✅ 畫出所有水球
-    for (WaterBomb* b : waterBombs) {
-        b->tick(); // 更新動畫/爆炸邏輯
+    // ✅ 畫出水球
+    for (int i = waterBombs.size() - 1; i >= 0; --i) {
+        WaterBomb* b = waterBombs[i];
+        b->tick();
+        if (b->getCurrentPixmap().isNull()) {
+            delete b;
+            waterBombs.removeAt(i);
+            continue;
+        }
         QPixmap pix = b->getCurrentPixmap();
         QPointF pos = QPointF(b->getGridPos().x() * 50, b->getGridPos().y() * 50);
         painter.drawPixmap(QRect(pos.x(), pos.y(), 50, 50), pix);
+    }
+
+    // ✅ 畫出水球爆炸
+    for (int i = explosions.size() - 1; i >= 0; --i) {
+        explosions[i]->draw(painter);
+        explosions[i]->tick();
+        if (explosions[i]->isExpired()) {
+            delete explosions[i];
+            explosions.removeAt(i);
+        }
     }
 
 }
@@ -105,8 +127,10 @@ void BattleScene::addMonster(Monster* m) {
 
 void BattleScene::addWaterBomb(WaterBomb* bomb) {
     waterBombs.append(bomb);
-    connect(bomb, &WaterBomb::exploded, this, [](QPoint center){
-        qDebug() << "[Scene] Bomb exploded at" << center;
-        // TODO: 未來實作爆炸範圍、火焰動畫
+    qDebug() << "[BattleScene] Add WaterBomb at" << bomb->getGridPos(); // ✅ 加上
+    connect(bomb, &WaterBomb::exploded, this, [=](QPoint center){
+        qDebug() << "[BattleScene] Bomb exploded at" << center;
+        explosions.append(new Explosion(center, this));
     });
+    update();
 }
