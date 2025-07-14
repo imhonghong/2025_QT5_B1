@@ -1,34 +1,39 @@
 #include "Robot.h"
+#include "PathFinder.h"
+#include "WaterBomb.h"
+#include "BattleScene.h"
+
 #include <QDebug>
+#include <QVector>
 
 
-Robot::Robot() {
-    position = QPoint(-1, -1);
-}
+Robot::Robot() {}
 
 void Robot::generatePlan(const QVector<QVector<int>>& map, const QPoint& playerPos) {
     plan.clear();
     stepIndex = 0;
 
-    // 這裡暫時直接走向 player（未考慮磚塊或放炸彈）
-    // 實作 BFS 可加入判斷 type==3 時加權重，但這裡先手動建路徑（示意）
-    QPoint cur = position;
-    while (cur != playerPos) {
-        QPoint next = cur;
-        if (cur.x() < playerPos.x()) next.setX(cur.x() + 1);
-        else if (cur.x() > playerPos.x()) next.setX(cur.x() - 1);
-        else if (cur.y() < playerPos.y()) next.setY(cur.y() + 1);
-        else if (cur.y() > playerPos.y()) next.setY(cur.y() - 1);
+    PathFinder pf(map);
+    QVector<QPoint> path = pf.findPath(getGridPos(), playerPos);
 
-        plan.push_back({ RobotAction::MoveTo, next });
-        cur = next;
+    if (path.isEmpty()) {
+        qDebug() << "[Robot] 找不到通往 player 的路徑";
+        return;
+    }
+    qDebug() << "[Robot] path length: " << path.size();
+    qDebug() << "[Robot] 計算路徑:" << path;
+
+
+
+    for (int i = 1; i < path.size(); ++i) {
+        plan.push_back({ RobotAction::MoveTo, path[i] });
     }
 
-    // 模擬抵達後放炸彈 + 退後 + 等待引爆
-    plan.push_back({ RobotAction::PlaceBomb, cur });
-    if (plan.size() >= 2)
-        plan.push_back({ RobotAction::MoveTo, plan[plan.size() - 2].pos }); // 倒退一步
-    plan.push_back({ RobotAction::Wait, cur, 3 }); // 等待3回合
+    // 模擬放水球 + 倒退一步 + 等待引爆
+    plan.push_back({ RobotAction::PlaceBomb, path.last() });
+    if (path.size() >= 2)
+        plan.push_back({ RobotAction::MoveTo, path[path.size() - 2] });
+    plan.push_back({ RobotAction::Wait, path[path.size() - 2], 3 });
 }
 
 void Robot::advanceStep() {
@@ -41,7 +46,11 @@ void Robot::advanceStep() {
         setGridPos(current.pos);
         break;
     case RobotAction::PlaceBomb:
-        qDebug() << "[Robot] Placed bomb at" << current.pos;
+        qDebug() << "[Robot] 放水球於" << current.pos;
+        if (scene) {
+            WaterBomb* bomb = new WaterBomb(current.pos);
+            scene->addWaterBomb(bomb);
+        }
         break;
     case RobotAction::Wait:
         if (current.wait > 1) {

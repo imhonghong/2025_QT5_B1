@@ -87,10 +87,26 @@ void BattleScene::paintEvent(QPaintEvent*) {
         }
     }
 
+    // ✅ 畫出所有水球
+    for (WaterBomb* b : waterBombs) {
+        b->tick(); // 更新動畫/爆炸邏輯
+        QPixmap pix = b->getCurrentPixmap();
+        QPointF pos = QPointF(b->getGridPos().x() * 50, b->getGridPos().y() * 50);
+        painter.drawPixmap(QRect(pos.x(), pos.y(), 50, 50), pix);
+    }
+
 }
 
 
 void BattleScene::addMonster(Monster* m) {
     monsters.append(m);
     update();
+}
+
+void BattleScene::addWaterBomb(WaterBomb* bomb) {
+    waterBombs.append(bomb);
+    connect(bomb, &WaterBomb::exploded, this, [](QPoint center){
+        qDebug() << "[Scene] Bomb exploded at" << center;
+        // TODO: 未來實作爆炸範圍、火焰動畫
+    });
 }

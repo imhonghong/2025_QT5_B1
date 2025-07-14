@@ -1,4 +1,5 @@
 #include "GameControllerMode1.h"
+#include "Robot.h"
 #include <QDebug>
 
 GameControllerMode1::GameControllerMode1() {}
@@ -33,6 +34,7 @@ void GameControllerMode1::initialize(BattleScene* scene) {
         for (int x = 0; x < map[y].size(); ++x) {
             if (map[y][x] == 5) {
                 Robot* robot = new Robot();
+                robot->setScene(scene);
                 robot->setGridPos(QPoint(x, y));
                 robot->generatePlan(map, player->getGridPos());
                 robots.push_back(robot);

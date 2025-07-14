@@ -7,6 +7,7 @@
 #include "GameMode.h"
 #include "Monster.h"
 #include "IGameController.h"
+#include "WaterBomb.h"
 
 class BattleScene : public QWidget {
     Q_OBJECT
@@ -18,6 +19,7 @@ public:
     void setController(IGameController* c);
 
     void addMonster(Monster* monster);
+    void addWaterBomb(WaterBomb* bomb);
 
 
 protected:
@@ -32,4 +34,5 @@ private:
     Player* player = nullptr;
     IGameController* controller = nullptr;
     QVector<Monster*> monsters;
+    QVector<WaterBomb*> waterBombs;
 };

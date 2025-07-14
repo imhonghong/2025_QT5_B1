@@ -7,7 +7,6 @@
 #include "GameMode.h"
 
 class BattleScene;
-
 class IGameController {
 public:
     virtual ~IGameController() {}

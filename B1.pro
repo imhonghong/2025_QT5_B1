@@ -15,10 +15,12 @@ SOURCES += \
     MapLoader.cpp \
     Monster.cpp \
     Octopus.cpp \
+    PathFinder.cpp \
     Player.cpp \
     Robot.cpp \
     SpriteSheetManager.cpp \
     TitleScene.cpp \
+    WaterBomb.cpp \
     main.cpp \
     MainWindow.cpp
 
@@ -33,10 +35,12 @@ HEADERS += \
     MapLoader.h \
     Monster.h \
     Octopus.h \
+    PathFinder.h \
     Player.h \
     Robot.h \
     SpriteSheetManager.h \
-    TitleScene.h
+    TitleScene.h \
+    WaterBomb.h
 
 FORMS += \
     mainwindow.ui
