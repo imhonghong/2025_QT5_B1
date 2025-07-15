@@ -100,10 +100,17 @@ void Robot::generateTestPlan(){
     qDebug() << "[Robot] generateTestPlan 被呼叫！";
     QPoint p0 = getGridPos();
     QPoint p1 = p0 + QPoint(1, 0);  // 右邊
+    QPoint p2 = p1 + QPoint(1, 0);
+    QPoint p3 = p2 + QPoint(1, 0);
     plan = {
-        { RobotAction::MoveTo, p1 },
-        { RobotAction::PlaceBomb, p1 },
-        { RobotAction::MoveTo, p0 },
-        { RobotAction::Wait, p0, 3 }
+        { RobotAction::MoveTo, p1},
+        { RobotAction::Wait, p1, 1},
+        { RobotAction::MoveTo, p2},
+        { RobotAction::PlaceBomb, p2 },
+        { RobotAction::MoveTo, p3 },
+        { RobotAction::Wait, p3, 30},
+        { RobotAction::PlaceBomb, p3 },
+        { RobotAction::MoveTo, p3+QPoint(1, 0) },
+        { RobotAction::Wait, p3+QPoint(1, 0), 3 }
     };
 }

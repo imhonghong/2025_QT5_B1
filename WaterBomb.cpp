@@ -11,6 +11,18 @@ QPoint WaterBomb::getGridPos() const {
     return gridPos;
 }
 
+bool WaterBomb::getHasExploded() const {
+    return hasExploded;
+}
+
+void WaterBomb::explode() {
+    if (!hasExploded) {
+        hasExploded = true;
+        emit exploded(gridPos);
+        qDebug() << "[WaterBomb] 被連鎖引爆 at" << gridPos;
+    }
+}
+
 void WaterBomb::tick() {
     if (hasExploded) return;
 

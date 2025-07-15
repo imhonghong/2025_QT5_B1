@@ -12,6 +12,9 @@ public:
     QPoint getGridPos() const;
     QPixmap getCurrentPixmap() const;
 
+    bool getHasExploded() const;
+    void explode();
+
 signals:
     void exploded(QPoint center);  // 可連接後續爆炸影響
 

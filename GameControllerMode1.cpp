@@ -40,6 +40,7 @@ void GameControllerMode1::initialize(BattleScene* scene) {
                 //robot->generatePlan(map, player->getGridPos());
                 robots.push_back(robot);
                 qDebug() << "[Robot] 初始位置:" << x << y;
+                scene->setRobot(robot);
             }
         }
     }

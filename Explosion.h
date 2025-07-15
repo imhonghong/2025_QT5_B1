@@ -31,6 +31,7 @@ private:
     QElapsedTimer timer;
     int duration = 500; // 火焰顯示時間(ms)
 
+    bool hasAppliedEffect = false;
     void generateFlames(int range);  // 根據 range 決定圖示與格子
     void applyEffects();             // 擊中玩家、怪、磚塊、水球等（預留）
 };

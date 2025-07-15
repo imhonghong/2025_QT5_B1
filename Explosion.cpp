@@ -19,7 +19,10 @@ bool Explosion::isExpired() const {
 }
 
 void Explosion::tick() {
-    // 如果有火焰動畫變化邏輯，可以放這裡
+    if (!hasAppliedEffect) {
+        applyEffects();
+        hasAppliedEffect = true;
+    }
 }
 
 void Explosion::draw(QPainter& painter) {
@@ -59,19 +62,62 @@ void Explosion::generateFlames(int range) {
             QPoint p = center + dir.delta * i;
             QString part = (i == range) ? "end" : "stem";  // 最遠端用 end，其餘用 stem
             QString baseKey = QString("WB_%1_%2").arg(part, dir.name);  // 不含 frame 編號
+            // ⛔ 若該格是不可炸磚，該格不加入火焰
+            if (scene->getMap(p) == 3)  // 3 代表不可炸牆
+                break;
             flames.push_back({ p, baseKey, now });
         }
     }
 }
 
 void Explosion::applyEffects() {
-    for (const auto& f : flames) {
-        // 可擴充功能：
-        // - 擊中 Player
-        // - 擊中 Monster
-        // - 擊中可炸磚
-        // - 引爆水球
-        // ➕ 你可透過 scene->getMap()[y][x] 之類進行處理
-        qDebug() << "[Explosion] 火焰於" << f.pos;
-    }
+
+    Player* player = scene->getPlayer();              // mode2
+    Robot* robot = scene->getRobot();                 // mode1
+    const QVector<Monster*>& monsters = scene->getMonsters();
+    const QVector<Octopus*>& octopi = scene->getOctopi();
+
+    for (const ExplosionFlame& f : flames) {
+        QPoint p = f.pos;
+
+        // 🎯 Robot
+        if (robot && robot->getGridPos() == p) {
+            qDebug() << "[Explosion] Robot 被炸死 at" << p;
+            // 之後可呼叫 robot->die()
+        }
+        // 🎯 Player
+        if (player && player->getGridPos() == p) {
+            qDebug() << "[Explosion] Player 被炸死 at" << p;
+            // 之後可呼叫 player->die()
+        }
+        // 🎯 Monsters
+        for (Monster* m : monsters) {
+            if (m && m->getGridPos() == p) {
+                qDebug() << "[Explosion] Monster 被炸死 at" << p;
+                // 之後可呼叫 m->die()
+            }
+        }
+        // 🎯 Octopi
+        for (Octopus* o : octopi) {
+            if (o && o->getGridPos() == p) {
+                qDebug() << "[Explosion] Octopus 被炸死 at" << p;
+                // 之後可呼叫 o->hit()
+            }
+        }
+        // 若是磚塊 → 爆破
+        if (scene->getMap(p) == 1) {  // 1 代表可炸磚
+            qDebug() << "[Explosion] 爆破磚塊 at" << p;
+            scene->setMap(p, 0);  // 設為空地
+        }
+        // 💣 引爆水球
+        for (WaterBomb* bomb : scene->getWaterBombs()) {
+            if (!bomb->getHasExploded() && bomb->getGridPos() == p) {
+                qDebug() << "[Explosion] 引爆水球 at" << p;
+                QTimer::singleShot(250, bomb, [bomb]() {
+                    bomb->explode();  // 延遲 0.25 秒觸發爆炸
+                });
+            }
+        }
+    }   // for Flame end
+
 }

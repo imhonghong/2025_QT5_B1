@@ -9,12 +9,30 @@
 BattleScene::BattleScene(QWidget *parent)
     : QWidget(parent) {}
 
+int BattleScene::getMap(const QPoint& p) const {
+    if (p.y() < 0 || p.y() >= mapData.size() ||
+        p.x() < 0 || p.x() >= mapData[0].size())
+        return -1;
+    return mapData[p.y()][p.x()];
+}
+
+void BattleScene::setMap(const QPoint& p, int value) {
+    if (p.y() < 0 || p.y() >= mapData.size() ||
+        p.x() < 0 || p.x() >= mapData[0].size())
+        return;
+    mapData[p.y()][p.x()] = value;
+}
+
 void BattleScene::setMap(const QVector<QVector<int>>& map) {
     mapData = map;
 }
 
 void BattleScene::setPlayer(Player* p) {
     player = p;
+}
+
+void BattleScene::setRobot(Robot* r) {
+    robot = r;
 }
 
 void BattleScene::setController(IGameController* c) {
@@ -133,4 +151,24 @@ void BattleScene::addWaterBomb(WaterBomb* bomb) {
         explosions.append(new Explosion(center, this));
     });
     update();
+}
+
+const QVector<WaterBomb*>& BattleScene::getWaterBombs() const {
+    return waterBombs;
+}
+
+Player* BattleScene::getPlayer() const {
+    return player;
+}
+
+Robot* BattleScene::getRobot() const {
+    return robot;
+}
+
+const QVector<Monster*>& BattleScene::getMonsters() const {
+    return monsters;
+}
+
+const QVector<Octopus*>& BattleScene::getOctopi() const {
+    return octopi;
 }
