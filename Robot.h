@@ -4,7 +4,6 @@
 
 #include <QVector>
 #include <QPoint>
-#include <QTimer>
 
 class BattleScene;
 class IGameController;
@@ -30,11 +29,10 @@ class Robot : public QObject, public Character {
 public:
     Robot();
     void setScene(BattleScene* s) { scene = s; }
-    bool canEscapeFrom(const QPoint& bombPoint, const QVector<QVector<int>>& map, QPoint& escapePoint) const;
-    void generateOneStepPlan(const QVector<QVector<int>>& map, const QPoint& playerPos);
+
+    void generatePlan(const QVector<QVector<int>>& map, const QPoint& playerPos);
     void advanceStep();
     void generateTestPlan(); //only for testing
-
 
     bool isFinished() const;
     void reset();
@@ -47,8 +45,6 @@ public:
     void setStepCount(int step) { stepCount = step; }
     int getStepCount() const { return stepCount; }
 
-    void startAutoAdvance();
-
 signals:
     void requestEndGame(bool isWin = false);  // mode1 中 robot 死亡代表輸
 
@@ -58,5 +54,4 @@ private:
     bool isMoving = false;
     int stepIndex = 0;
     int stepCount = 0;
-    QTimer* stepTimer = nullptr;
 };

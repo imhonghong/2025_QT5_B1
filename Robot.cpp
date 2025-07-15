@@ -2,119 +2,42 @@
 #include "PathFinder.h"
 #include "WaterBomb.h"
 #include "BattleScene.h"
-#include "HashUtil.h"
 
 #include <QDebug>
 #include <QVector>
-#include <QSet>
-#include <QHash>
 
 
 Robot::Robot() {}
 
-void Robot::generateOneStepPlan(const QVector<QVector<int>>& map, const QPoint& playerPos) {
+void Robot::generatePlan(const QVector<QVector<int>>& map, const QPoint& playerPos) {
     plan.clear();
     stepIndex = 0;
 
     PathFinder pf(map);
-    QVector<QPoint> path;
-    QPoint bombPos;
+    QVector<QPoint> path = pf.findPath(getGridPos(), playerPos);
 
-    // 嘗試找炸牆點
-    if (pf.findNextBombPlan(getGridPos(), bombPos, path)) {
-        QPoint escape;
-        if (!canEscapeFrom(bombPos, map, escape)) {
-            qDebug() << "[Robot] 找到炸點但無法逃離，放棄此次炸彈";
-            return;
-        }
-
-        // 加入移動步驟
-        for (int i = 1; i < path.size(); ++i) {
-            plan.push_back({ RobotAction::MoveTo, path[i] });
-        }
-
-        // 放炸 + 躲避 + 等待
-        plan.push_back({ RobotAction::PlaceBomb, bombPos });
-        plan.push_back({ RobotAction::MoveTo, escape });
-        plan.push_back({ RobotAction::Wait, escape, 6 });
+    if (path.isEmpty()) {
+        qDebug() << "[Robot] 找不到通往 player 的路徑";
         return;
     }
+    qDebug() << "[Robot] path length: " << path.size();
+    qDebug() << "[Robot] 計算路徑:" << path;
 
-    // 找不到炸牆點，嘗試炸 player
-    static const QVector<QPoint> aroundPlayer = {
-        playerPos + QPoint(1, 0), playerPos + QPoint(-1, 0),
-        playerPos + QPoint(0, 1), playerPos + QPoint(0, -1)
-    };
 
-    for (const QPoint& pos : aroundPlayer) {
-        if (map[pos.y()][pos.x()] != 0) continue;
 
-        QVector<QPoint> path = pf.findPath(getGridPos(), pos);
-        if (path.isEmpty()) continue;
-
-        QPoint escape;
-        if (!canEscapeFrom(pos, map, escape)) continue;
-
-        for (int i = 1; i < path.size(); ++i) {
-            plan.push_back({ RobotAction::MoveTo, path[i] });
-        }
-
-        plan.push_back({ RobotAction::PlaceBomb, pos });
-        plan.push_back({ RobotAction::MoveTo, escape });
-        plan.push_back({ RobotAction::Wait, escape, 6 });
-        return;
+    for (int i = 1; i < path.size(); ++i) {
+        plan.push_back({ RobotAction::MoveTo, path[i] });
     }
 
-    qDebug() << "[Robot] 找不到可行策略";
-}
-
-
-
-
-bool Robot::canEscapeFrom(const QPoint& bombPoint, const QVector<QVector<int>>& map, QPoint& escapePoint) const {
-    const int rows = map.size();
-    const int cols = map[0].size();
-
-    for (int dx = -2; dx <= 2; ++dx) {
-        for (int dy = -2; dy <= 2; ++dy) {
-            if (abs(dx) + abs(dy) != 2) continue; // 只取曼哈頓距離為2的格子
-
-            QPoint candidate = bombPoint + QPoint(dx, dy);
-            if (candidate.x() < 0 || candidate.x() >= cols || candidate.y() < 0 || candidate.y() >= rows)
-                continue;
-
-            if (map[candidate.y()][candidate.x()] == 0) {
-                escapePoint = candidate;
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-
-
-void Robot::startAutoAdvance() {
-    if (!stepTimer) {
-        stepTimer = new QTimer(this);
-        connect(stepTimer, &QTimer::timeout, this, [this]() {
-            this->advanceStep();
-        });
-        stepTimer->start(500); // 每秒執行一次
-        qDebug() << "[Robot] 自動移動計時器啟動";
-    }
+    // 模擬放水球 + 倒退一步 + 等待引爆
+    plan.push_back({ RobotAction::PlaceBomb, path.last() });
+    if (path.size() >= 2)
+        plan.push_back({ RobotAction::MoveTo, path[path.size() - 2] });
+    plan.push_back({ RobotAction::Wait, path[path.size() - 2], 3 });
 }
 
 void Robot::advanceStep() {
-    if (stepIndex >= plan.size()) {
-        if (scene) {
-            QVector<QVector<int>> updatedMap = scene->getCurrentMap();
-            QPoint playerPos = scene->getPlayerGridPos();
-            generateOneStepPlan(updatedMap, playerPos);
-        }
-        return;
-    }
+    if (stepIndex >= plan.size()) return;
 
     Step& current = plan[stepIndex];
 
@@ -131,7 +54,7 @@ void Robot::advanceStep() {
             nextFrame(4);
             break;
         }
-    case RobotAction::PlaceBomb: {
+        case RobotAction::PlaceBomb: {
             if (scene) {
                 WaterBomb* bomb = new WaterBomb(current.pos);
                 scene->addWaterBomb(bomb);
@@ -139,19 +62,17 @@ void Robot::advanceStep() {
             }
             break;
         }
-    case RobotAction::Wait: {
+        case RobotAction::Wait: {
             if (current.wait > 1) {
                 current.wait--;
                 isMoving = false;
                 return;
             }
-            break;  // wait 結束
+            break;
         }
-    }
-
-    stepIndex++;  // ☑️ 統一推進 stepIndex
+    } //switch end
+    stepIndex++;
 }
-
 
 
 bool Robot::isFinished() const {
@@ -207,4 +128,3 @@ void Robot::onDie() {
     qDebug() << "[Robot] onDie 被呼叫，觸發結束";
     emit requestEndGame(false);
 }
-
