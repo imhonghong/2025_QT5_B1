@@ -2,6 +2,7 @@
 #include "Robot.h"
 #include <QDebug>
 
+
 GameControllerMode1::GameControllerMode1() {}
 
 GameControllerMode1::~GameControllerMode1() {
@@ -21,7 +22,7 @@ void GameControllerMode1::initialize(BattleScene* scene) {
             if (map[y][x] == 4) {
                 player = new Player();
                 player->setGridPos(QPoint(x, y));
-                player->setDirection(0);
+                player->setDirection(Direction::Down);
                 scene->setPlayer(player);
                 break;  // 一次只有一位 player，找到就離開
             }
@@ -41,11 +42,13 @@ void GameControllerMode1::initialize(BattleScene* scene) {
                 robots.push_back(robot);
                 qDebug() << "[Robot] 初始位置:" << x << y;
                 scene->setRobot(robot);
+                connect(robot, &Robot::requestEndGame, scene, &BattleScene::gameEnded);
             }
         }
     }
 
     qDebug() << "[GameControllerMode1] Initialized with player and" << robots.size() << "robot(s)";
+
 }
 
 void GameControllerMode1::update(float delta) {

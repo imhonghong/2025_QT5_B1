@@ -83,6 +83,7 @@ void Explosion::applyEffects() {
         // 🎯 Robot
         if (robot && robot->getGridPos() == p) {
             qDebug() << "[Explosion] Robot 被炸死 at" << p;
+            robot->takeDamage(1);
             // 之後可呼叫 robot->die()
         }
         // 🎯 Player

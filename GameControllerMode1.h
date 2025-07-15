@@ -4,8 +4,11 @@
 #include "BattleScene.h"
 #include "Robot.h"
 #include "MapLoader.h"
+#include <QObject>
 
-class GameControllerMode1 : public IGameController {
+class GameControllerMode1 : public QObject, public IGameController {
+    Q_OBJECT
+
 public:
     GameControllerMode1();
     ~GameControllerMode1();

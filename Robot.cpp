@@ -37,31 +37,40 @@ void Robot::generatePlan(const QVector<QVector<int>>& map, const QPoint& playerP
 }
 
 void Robot::advanceStep() {
-
     if (stepIndex >= plan.size()) return;
-    qDebug() << "[Robot] stepIndex =" << stepIndex << "計畫總長:" << plan.size();
 
-    Step current = plan[stepIndex];
+    Step& current = plan[stepIndex];
 
     switch (current.action) {
-    case RobotAction::MoveTo:
-        setGridPos(current.pos);
-        break;
-    case RobotAction::PlaceBomb:
-        qDebug() << "[Robot] 放水球於" << current.pos;
-        if (scene) {
-            WaterBomb* bomb = new WaterBomb(current.pos);
-            scene->addWaterBomb(bomb);
-        }
-        break;
-    case RobotAction::Wait:
-        if (current.wait > 1) {
-            plan[stepIndex].wait--;
-            return;
-        }
-        break;
-    }
+        case RobotAction::MoveTo: {
+            QPoint delta = current.pos - getGridPos();
+            if (delta == QPoint(0, 1)) setDirection(Direction::Down);
+            else if (delta == QPoint(0, -1)) setDirection(Direction::Up);
+            else if (delta == QPoint(-1, 0)) setDirection(Direction::Left);
+            else if (delta == QPoint(1, 0)) setDirection(Direction::Right);
 
+            setGridPos(current.pos);
+            isMoving = true;
+            nextFrame(4);
+            break;
+        }
+        case RobotAction::PlaceBomb: {
+            if (scene) {
+                WaterBomb* bomb = new WaterBomb(current.pos);
+                scene->addWaterBomb(bomb);
+                isMoving = false;
+            }
+            break;
+        }
+        case RobotAction::Wait: {
+            if (current.wait > 1) {
+                current.wait--;
+                isMoving = false;
+                return;
+            }
+            break;
+        }
+    } //switch end
     stepIndex++;
 }
 
@@ -76,23 +85,23 @@ void Robot::reset() {
 }
 
 
-QString Robot::getCurrentSprite() const {
+QString Robot::getFrameKey() const {
     QString dirStr;
-    switch (direction) {
-    case 0: dirStr = "down"; break;
-    case 1: dirStr = "up"; break;
-    case 2: dirStr = "left"; break;
-    case 3: dirStr = "right"; break;
+    switch (getDirection()) {
+        case Direction::Down: dirStr = "down"; break;
+        case Direction::Up: dirStr = "up"; break;
+        case Direction::Left: dirStr = "left"; break;
+        case Direction::Right: dirStr = "right"; break;
     }
 
     if (isMoving)
-        return QString("R_walk_%1_%2").arg(dirStr).arg(frameIndex + 1);
+        return QString("R_walk_%1_%2").arg(dirStr).arg(getFrameIndex());
     else
         return QString("R_stand_%1_1").arg(dirStr);
 }
 
 QPixmap Robot::getCurrentPixmap() const {
-    QString frameKey = getCurrentSprite();
+    QString frameKey = getFrameKey();
     return SpriteSheetManager::instance().getFrame(frameKey);
 }
 
@@ -113,4 +122,9 @@ void Robot::generateTestPlan(){
         { RobotAction::MoveTo, p3+QPoint(1, 0) },
         { RobotAction::Wait, p3+QPoint(1, 0), 3 }
     };
+}
+
+void Robot::onDie() {
+    qDebug() << "[Robot] onDie 被呼叫，觸發結束";
+    emit requestEndGame(false);
 }

@@ -24,7 +24,8 @@ struct Step {
 };
 
 
-class Robot : public Character {
+class Robot : public QObject, public Character {
+    Q_OBJECT
 public:
     Robot();
     void setScene(BattleScene* s) { scene = s; }
@@ -36,20 +37,21 @@ public:
     bool isFinished() const;
     void reset();
 
-    QString getCurrentSprite() const;
+    QString getFrameKey() const override;
+    void onDie() override;
     QPixmap getCurrentPixmap() const;
 
 
     void setStepCount(int step) { stepCount = step; }
     int getStepCount() const { return stepCount; }
 
+signals:
+    void requestEndGame(bool isWin = false);  // mode1 中 robot 死亡代表輸
+
 private:
     QVector<Step> plan;
     BattleScene* scene = nullptr;
-
-    int stepIndex = 0;
-    int direction = 0;     // 0=down, 1=up, 2=left, 3=right
-    int frameIndex = 0;
     bool isMoving = false;
+    int stepIndex = 0;
     int stepCount = 0;
 };

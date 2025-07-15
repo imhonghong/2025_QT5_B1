@@ -86,10 +86,10 @@ void BattleScene::paintEvent(QPaintEvent*) {
 
         QString directionStr;
         switch (player->getDirection()) {
-            case 0: directionStr = "down"; break;
-            case 1: directionStr = "up"; break;
-            case 2: directionStr = "left"; break;
-            case 3: directionStr = "right"; break;
+            case Direction::Down: directionStr = "down"; break;
+            case Direction::Up: directionStr = "up"; break;
+            case Direction::Left: directionStr = "left"; break;
+            case Direction::Right: directionStr = "right"; break;
             default: directionStr = "down"; break;
         }
 
@@ -106,7 +106,7 @@ void BattleScene::paintEvent(QPaintEvent*) {
         for (Robot* r : controller->getRobots()) {
             QPointF pos = r->getScreenPos();
             QRect rect(pos.x(), pos.y(), cellSize, cellSize);
-            QString key = r->getCurrentSprite();
+            QString key = r->getFrameKey();
             QPixmap sprite = SpriteSheetManager::instance().getFrame(key);
             painter.drawPixmap(rect, sprite);
         }
