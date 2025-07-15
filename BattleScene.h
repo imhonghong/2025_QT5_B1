@@ -18,13 +18,16 @@ class BattleScene : public QWidget {
 public:
     explicit BattleScene(QWidget *parent = nullptr);
 
-    int getMap(const QPoint& p) const;
+    int getMap(const QPoint& p) const; //單格地圖
+    QVector<QVector<int>> getCurrentMap() const; //尋路用，整張地圖
     void setMap(const QPoint& p, int val); //for explosion
     void setMap(const QVector<QVector<int>>& map); //for read txt
 
     void setPlayer(Player* player);
     void setRobot(Robot* r);
     void setController(IGameController* c);
+
+    QPoint getPlayerGridPos() const; //尋路用
 
     Player* getPlayer() const;
     Robot* getRobot() const;

@@ -32,6 +32,7 @@ HEADERS += \
     Explosion.h \
     GameControllerMode1.h \
     GameMode.h \
+    HashUtil.h \
     IGameController.h \
     MainWindow.h \
     MapLoader.h \

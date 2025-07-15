@@ -9,6 +9,16 @@
 BattleScene::BattleScene(QWidget *parent)
     : QWidget(parent) {}
 
+QPoint BattleScene::getPlayerGridPos() const {
+    if (player)
+        return player->getGridPos();
+    return QPoint(-1, -1);
+}
+
+QVector<QVector<int>> BattleScene::getCurrentMap() const {
+    return mapData;
+}
+
 int BattleScene::getMap(const QPoint& p) const {
     if (p.y() < 0 || p.y() >= mapData.size() ||
         p.x() < 0 || p.x() >= mapData[0].size())

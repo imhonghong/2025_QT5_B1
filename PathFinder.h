@@ -10,6 +10,7 @@ public:
     PathFinder(const QVector<QVector<int>>& map);
 
     QVector<QPoint> findPath(QPoint start, QPoint end); // 回傳從 start 到 end 的最短路徑
+    bool findNextBombPlan(QPoint start, QPoint& bombPoint, QVector<QPoint>& pathToBomb);
 
 private:
     QVector<QVector<int>> map;
@@ -17,4 +18,5 @@ private:
 
     bool isValid(QPoint pt);
     int getCost(QPoint pt);
+
 };

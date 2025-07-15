@@ -37,8 +37,9 @@ void GameControllerMode1::initialize(BattleScene* scene) {
                 Robot* robot = new Robot();
                 robot->setScene(scene);
                 robot->setGridPos(QPoint(x, y));
-                robot->generateTestPlan();
-                //robot->generatePlan(map, player->getGridPos());
+                // robot->generateTestPlan();
+                robot->generateOneStepPlan(map, player->getGridPos());
+                robot->startAutoAdvance();
                 robots.push_back(robot);
                 qDebug() << "[Robot] 初始位置:" << x << y;
                 scene->setRobot(robot);

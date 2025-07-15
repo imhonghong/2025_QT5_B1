@@ -3,11 +3,7 @@
 #include <QPair>
 #include <QDebug>
 #include <QHash>
-
-inline uint qHash(const QPoint& key, uint seed = 0) {
-    return qHash(QPair<int, int>(key.x(), key.y()), seed);
-}
-
+#include "HashUtil.h"
 
 PathFinder::PathFinder(const QVector<QVector<int>>& map)
     : map(map), rows(map.size()), cols(map[0].size()) {}
@@ -66,4 +62,51 @@ QVector<QPoint> PathFinder::findPath(QPoint start, QPoint end) {
     }
     path.prepend(start);
     return path;
+}
+
+bool PathFinder::findNextBombPlan(QPoint start, QPoint& bombPoint, QVector<QPoint>& pathToBomb) {
+    QVector<QPoint> candidates;
+
+    static const QVector<QPoint> directions = {
+        QPoint(0, 1), QPoint(0, -1),
+        QPoint(1, 0), QPoint(-1, 0)
+    };
+
+    // 找所有炸牆點（可移動空格，且鄰近有牆）
+    for (int y = 0; y < rows; ++y) {
+        for (int x = 0; x < cols; ++x) {
+            QPoint pt(x, y);
+            if (map[y][x] != 0) continue;
+            for (const QPoint& dir : directions) {
+                QPoint neighbor = pt + dir;
+                if (isValid(neighbor) && map[neighbor.y()][neighbor.x()] == 1) {
+                    candidates.push_back(pt);
+                    break;
+                }
+            }
+        }
+    }
+
+    int minCost = 999999;
+    QVector<QPoint> bestPath;
+    QPoint bestBomb;
+
+    for (const QPoint& cand : candidates) {
+        QVector<QPoint> path = findPath(start, cand);
+        if (path.isEmpty()) continue;
+
+        if (path.size() < minCost) {
+            minCost = path.size();
+            bestPath = path;
+            bestBomb = cand;
+        }
+    }
+
+    if (!bestPath.isEmpty()) {
+        bombPoint = bestBomb;
+        pathToBomb = bestPath;
+        return true;
+    }
+
+    return false;
 }
