@@ -98,11 +98,9 @@ PathResult PathFinder::findPath(QPoint start, QPoint player) {
     for (int i = 0; i < bestPath.size() - 1; ++i) {
         QPoint curr = bestPath[i];
         QPoint next = bestPath[i + 1];
-        QPoint dir = next - curr;
-        QPoint ahead = next + dir;
 
-        if (isValid(ahead) && map[ahead.y()][ahead.x()] == 1) {
-            result.bombSpots.append(next); // 在 next 放炸彈
+        if (isValid(next) && map[next.y()][next.x()] == 1) {
+            result.bombSpots.append(curr);
         }
     }
     result.bombSpots.append(bestPath[bestPath.size()-1]);

@@ -8,7 +8,13 @@
 #include <QVector>
 #include <QSet>
 
-Robot::Robot() {}
+Robot::Robot() {
+    /*
+    actionTimer = new QTimer(this);
+    actionTimer->setInterval(500); // 每 0.5 秒執行一次
+    connect(actionTimer, &QTimer::timeout, this, &Robot::advanceStep);
+    */
+}
 
 void Robot::generatePlan(const QVector<QVector<int>>& map, const QPoint& playerPos) {
     plan.clear();
@@ -31,7 +37,7 @@ void Robot::generatePlan(const QVector<QVector<int>>& map, const QPoint& playerP
     qDebug() << "[Robot] path:" << path;
     qDebug() << "[Robot] bombSpots:" << res.bombSpots;
 
-    for (int i = 1; i < path.size(); ++i) {
+    for (int i = 0; i < path.size(); ++i) {
         const QPoint& current = path[i];
 
         // 一般移動
@@ -42,49 +48,30 @@ void Robot::generatePlan(const QVector<QVector<int>>& map, const QPoint& playerP
             // 放炸彈
             plan.push_back({ RobotAction::PlaceBomb, current });
 
-            // 回退（逐格倒退兩步）
-            int stepsBack = 0;
-            for (int j = i - 1; j > 0 && stepsBack < 2; --j) {
-                plan.push_back({ RobotAction::MoveTo, path[j] });
-                stepsBack++;
+            if ( i > 2){
+                int stepsBack = 0;
+                for (int j = i - 1; j >= 0 && stepsBack < 2; --j) {
+                    plan.push_back({ RobotAction::MoveTo, path[j] });
+                    stepsBack++;
+                }
+                plan.push_back({ RobotAction::Wait, getGridPos(), 190 }); //3000/16ms
+
+            } else {
+                EscapePlan eplan = generateEscapePlan(current, map);
+
+                for (int j = 1; j < eplan.retreatPath.size(); ++j)
+                    plan.push_back({ RobotAction::MoveTo, eplan.retreatPath[j] });
+
+                plan.push_back({ RobotAction::Wait, eplan.retreatPath.last(), 190 });  // 3 秒等待
+
+                for (int j = 1; j < eplan.returnPath.size(); ++j)
+                    plan.push_back({ RobotAction::MoveTo, eplan.returnPath[j] });
             }
 
-            // 找不到兩步就用 fallback
-            if (stepsBack < 2) {
-                QPoint alt = findEscapePointAround(current, map);
-                if (alt != current)
-                    plan.push_back({ RobotAction::MoveTo, alt });
-            }
-
-            // 等待
-            plan.push_back({ RobotAction::Wait, getGridPos(), 190 });
         }
     }
 }
 
-
-bool Robot::isSafeToRetreat(const QPoint& bombPoint, const QVector<QPoint>& path, const QVector<QVector<int>>& map) const {
-    int idx = path.indexOf(bombPoint);
-    if (idx < 2) return false;
-
-    QPoint escape = path[idx - 2];
-    if (escape.y() < 0 || escape.y() >= map.size()) return false;
-    if (escape.x() < 0 || escape.x() >= map[0].size()) return false;
-
-    return map[escape.y()][escape.x()] == 0;
-}
-
-QPoint Robot::findEscapePointAround(const QPoint& bombPoint, const QVector<QVector<int>>& map) const {
-    for (int dx = -2; dx <= 2; ++dx) {
-        for (int dy = -2; dy <= 2; ++dy) {
-            if (abs(dx) + abs(dy) != 2) continue;
-            QPoint p = bombPoint + QPoint(dx, dy);
-            if (p.x() < 0 || p.x() >= map[0].size() || p.y() < 0 || p.y() >= map.size()) continue;
-            if (map[p.y()][p.x()] == 0) return p;
-        }
-    }
-    return bombPoint;  // fallback: 沒得逃就站原地（雖然會被炸死）
-}
 
 void Robot::advanceStep() {
     if (stepIndex >= plan.size()) return;
@@ -117,7 +104,7 @@ void Robot::advanceStep() {
         case RobotAction::Wait: {
             if (current.wait > 1) {
                 current.wait--;
-                qDebug() << "Wait at: " << current.pos;
+                // qDebug() << "Wait at: " << current.pos;
                 isMoving = false;
                 return;
             }
@@ -180,4 +167,29 @@ void Robot::generateTestPlan(){
 void Robot::onDie() {
     qDebug() << "[Robot] onDie 被呼叫，觸發結束";
     emit requestEndGame(false);
+}
+
+EscapePlan Robot::generateEscapePlan(const QPoint& bombPoint, const QVector<QVector<int>>& map) {
+    EscapePlan plan;
+
+    QVector<QPoint> candidates = {
+        bombPoint + QPoint(2,0), bombPoint + QPoint(-2,0),
+        bombPoint + QPoint(0,2), bombPoint + QPoint(0,-2),
+        bombPoint + QPoint(1,1), bombPoint + QPoint(-1,1),
+        bombPoint + QPoint(1,-1), bombPoint + QPoint(-1,-1)
+    };
+
+    for (const QPoint& escape : candidates) {
+        PathFinder pf(map);
+        QVector<QPoint> toEscape = pf.bfs(bombPoint, escape);
+        QVector<QPoint> toBack = pf.bfs(escape, bombPoint);
+
+        if (!toEscape.isEmpty() && !toBack.isEmpty()) {
+            plan.retreatPath = toEscape;
+            plan.returnPath = toBack;
+            return plan;
+        }
+    }
+
+    return plan; // 如果沒找到，就回傳空的兩段 path
 }

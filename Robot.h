@@ -4,6 +4,7 @@
 
 #include <QVector>
 #include <QPoint>
+#include <QTimer>
 
 class BattleScene;
 class IGameController;
@@ -23,6 +24,10 @@ struct Step {
         : action(a), pos(p), wait(w) {}
 };
 
+struct EscapePlan {
+    QVector<QPoint> retreatPath; // 從炸點走到安全點（逐格）
+    QVector<QPoint> returnPath;  // 從安全點回炸點（逐格）
+};
 
 class Robot : public QObject, public Character {
     Q_OBJECT
@@ -54,7 +59,7 @@ private:
     bool isMoving = false;
     int stepIndex = 0;
     int stepCount = 0;
+    QTimer* actionTimer = nullptr;
 
-    bool isSafeToRetreat(const QPoint& bombPoint, const QVector<QPoint>& path, const QVector<QVector<int>>& map) const;
-    QPoint findEscapePointAround(const QPoint& bombPoint, const QVector<QVector<int>>& map) const;
+    EscapePlan generateEscapePlan(const QPoint& bombPoint, const QVector<QVector<int>>& map); // 備用撤退方案
 };

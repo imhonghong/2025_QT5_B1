@@ -14,7 +14,7 @@ class PathFinder {
 public:
     PathFinder(const QVector<QVector<int>>& map);
     PathResult findPath(QPoint start, QPoint player); //計算 robot 到 player 周圍
-
+    QVector<QPoint> bfs(QPoint start, QPoint end); // 尋路 helper，robot 也會用到
 
 private:
     QVector<QVector<int>> map;
@@ -22,5 +22,5 @@ private:
 
     bool isValid(QPoint pt);
     int getCost(QPoint pt);
-    QVector<QPoint> bfs(QPoint start, QPoint end); // 尋路 helper
+
 };
