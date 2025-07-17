@@ -64,7 +64,11 @@ void Player::takeDamage(int dmg) {
 
 void Player::onDie() {
     qDebug() << "[Player] 死亡！可加入動畫或結束遊戲邏輯";
-    // controller->onPlayerDied();  // 如果有這種 callback
+    state = PlayerState::Dead;
+
+    if (controller && controller->getMode() == GameMode::Mode1) {
+        emit requestEndGame(true);  // Robot 贏
+    }
 }
 
 QString Player::getFrameKey() const {

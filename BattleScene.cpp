@@ -145,6 +145,10 @@ void BattleScene::paintEvent(QPaintEvent*) {
         }
     }
 
+    if (controller && controller->getMode() == GameMode::Mode1) {
+        painter.setPen(Qt::red);
+        painter.drawText(rect().adjusted(400, 450, -10, -10), Qt::AlignRight, QString("Step: %1").arg(stepCount));
+    }
 }
 
 

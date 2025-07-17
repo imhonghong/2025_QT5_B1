@@ -46,10 +46,6 @@ public:
     void onDie() override;
     QPixmap getCurrentPixmap() const;
 
-
-    void setStepCount(int step) { stepCount = step; }
-    int getStepCount() const { return stepCount; }
-
 signals:
     void requestEndGame(bool isWin = false);  // mode1 中 robot 死亡代表輸
 
@@ -58,7 +54,7 @@ private:
     BattleScene* scene = nullptr;
     bool isMoving = false;
     int stepIndex = 0;
-    int stepCount = 0;
+
     QTimer* actionTimer = nullptr;
 
     EscapePlan generateEscapePlan(const QPoint& bombPoint, const QVector<QVector<int>>& map); // 備用撤退方案

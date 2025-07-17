@@ -51,6 +51,8 @@ public:
     void onDie() override;
     QString getFrameKey() const override;
 
+signals:
+    void requestEndGame(bool isWin);
 
 private:
     IGameController* controller = nullptr;

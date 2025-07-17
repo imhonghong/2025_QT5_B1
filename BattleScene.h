@@ -39,6 +39,9 @@ public:
 
     const QVector<WaterBomb*>& getWaterBombs() const;
 
+    //mode1
+    void incrementStepCount() { ++stepCount; update(); }
+
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -62,4 +65,8 @@ private:
     QVector<Explosion*> explosions;
 
     QTimer updateTimer;
+
+    //for mode1
+    int stepCount = -1;
+
 };

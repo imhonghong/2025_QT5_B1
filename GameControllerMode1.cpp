@@ -24,6 +24,8 @@ void GameControllerMode1::initialize(BattleScene* scene) {
                 player->setGridPos(QPoint(x, y));
                 player->setDirection(Direction::Down);
                 scene->setPlayer(player);
+                player->setController(this);
+                connect(player, &Player::requestEndGame, scene, &BattleScene::gameEnded);
                 break;  // 一次只有一位 player，找到就離開
             }
         }
@@ -37,7 +39,6 @@ void GameControllerMode1::initialize(BattleScene* scene) {
                 Robot* robot = new Robot();
                 robot->setScene(scene);
                 robot->setGridPos(QPoint(x, y));
-                // robot->generateTestPlan();
                 robot->generatePlan(map, player->getGridPos());
                 robots.push_back(robot);
                 qDebug() << "[Robot] 初始位置:" << x << y;

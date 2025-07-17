@@ -88,7 +88,8 @@ void Explosion::applyEffects() {
         }
         // 🎯 Player
         if (player && player->getGridPos() == p) {
-            qDebug() << "[Explosion] Player 被炸死 at" << p;
+            player->takeDamage(1);
+            qDebug() << "[Explosion] Player take damage at " << p;
             // 之後可呼叫 player->die()
         }
         // 🎯 Monsters

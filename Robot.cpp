@@ -8,13 +8,7 @@
 #include <QVector>
 #include <QSet>
 
-Robot::Robot() {
-    /*
-    actionTimer = new QTimer(this);
-    actionTimer->setInterval(500); // 每 0.5 秒執行一次
-    connect(actionTimer, &QTimer::timeout, this, &Robot::advanceStep);
-    */
-}
+Robot::Robot() { }
 
 void Robot::generatePlan(const QVector<QVector<int>>& map, const QPoint& playerPos) {
     plan.clear();
@@ -42,30 +36,41 @@ void Robot::generatePlan(const QVector<QVector<int>>& map, const QPoint& playerP
 
         // 一般移動
         plan.push_back({ RobotAction::MoveTo, current });
+        plan.push_back({ RobotAction::Wait, current, 30 }); //主動停頓
 
         // 若是炸彈點，插入炸退腳本
         if (bombSet.contains(current)) {
             // 放炸彈
             plan.push_back({ RobotAction::PlaceBomb, current });
-
             if ( i > 2){
-                int stepsBack = 0;
-                for (int j = i - 1; j >= 0 && stepsBack < 2; --j) {
-                    plan.push_back({ RobotAction::MoveTo, path[j] });
-                    stepsBack++;
-                }
-                plan.push_back({ RobotAction::Wait, getGridPos(), 190 }); //3000/16ms
+                QVector<QPoint> retreat;
+
+                retreat.push_back(path[i-1]);
+                retreat.push_back(path[i-2]);
+                plan.push_back({ RobotAction::MoveTo, path[i-1] });
+                plan.push_back({ RobotAction::Wait, path[i-1], 30 });
+                plan.push_back({ RobotAction::MoveTo, path[i-2] });
+                plan.push_back({ RobotAction::Wait, path[i-2], 30 });
+                plan.push_back({ RobotAction::Wait, getGridPos(), 190 }); // 3秒
+                plan.push_back({ RobotAction::MoveTo, path[i-1] });
+                plan.push_back({ RobotAction::Wait, path[i-1], 30 });
+                plan.push_back({ RobotAction::MoveTo, path[i] });
+                plan.push_back({ RobotAction::Wait, path[i], 30 });
+
 
             } else {
                 EscapePlan eplan = generateEscapePlan(current, map);
 
-                for (int j = 1; j < eplan.retreatPath.size(); ++j)
+                for (int j = 1; j < eplan.retreatPath.size(); ++j){
                     plan.push_back({ RobotAction::MoveTo, eplan.retreatPath[j] });
-
+                    plan.push_back({ RobotAction::Wait, current, 30 }); //主動停頓
+                }
                 plan.push_back({ RobotAction::Wait, eplan.retreatPath.last(), 190 });  // 3 秒等待
 
-                for (int j = 1; j < eplan.returnPath.size(); ++j)
+                for (int j = 1; j < eplan.returnPath.size(); ++j){
                     plan.push_back({ RobotAction::MoveTo, eplan.returnPath[j] });
+                    plan.push_back({ RobotAction::Wait, eplan.returnPath[j], 30 }); //主動停頓
+                }
             }
 
         }
@@ -77,16 +82,22 @@ void Robot::advanceStep() {
     if (stepIndex >= plan.size()) return;
 
     Step& current = plan[stepIndex];
+    if (scene && current.action == RobotAction::MoveTo)
+        scene->incrementStepCount();
+
 
     switch (current.action) {
         case RobotAction::MoveTo: {
-            QPoint delta = current.pos - getGridPos();
+            QPoint prevPos = getGridPos();              // ⬅️ 先記下原位置
+            setGridPos(current.pos);                    // ⬅️ 然後移動
+            QPoint delta = current.pos - prevPos;
             if (delta == QPoint(0, 1)) setDirection(Direction::Down);
             else if (delta == QPoint(0, -1)) setDirection(Direction::Up);
             else if (delta == QPoint(-1, 0)) setDirection(Direction::Left);
             else if (delta == QPoint(1, 0)) setDirection(Direction::Right);
 
             setGridPos(current.pos);
+
             qDebug() << "Move to: " << current.pos;
             isMoving = true;
             nextFrame(4);
@@ -145,24 +156,6 @@ QPixmap Robot::getCurrentPixmap() const {
     return SpriteSheetManager::instance().getFrame(frameKey);
 }
 
-void Robot::generateTestPlan(){
-    qDebug() << "[Robot] generateTestPlan 被呼叫！";
-    QPoint p0 = getGridPos();
-    QPoint p1 = p0 + QPoint(1, 0);  // 右邊
-    QPoint p2 = p1 + QPoint(1, 0);
-    QPoint p3 = p2 + QPoint(1, 0);
-    plan = {
-        { RobotAction::MoveTo, p1},
-        { RobotAction::Wait, p1, 1},
-        { RobotAction::MoveTo, p2},
-        { RobotAction::PlaceBomb, p2 },
-        { RobotAction::MoveTo, p3 },
-        { RobotAction::Wait, p3, 30},
-        { RobotAction::PlaceBomb, p3 },
-        { RobotAction::MoveTo, p3+QPoint(1, 0) },
-        { RobotAction::Wait, p3+QPoint(1, 0), 3 }
-    };
-}
 
 void Robot::onDie() {
     qDebug() << "[Robot] onDie 被呼叫，觸發結束";
