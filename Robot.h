@@ -54,4 +54,7 @@ private:
     bool isMoving = false;
     int stepIndex = 0;
     int stepCount = 0;
+
+    bool isSafeToRetreat(const QPoint& bombPoint, const QVector<QPoint>& path, const QVector<QVector<int>>& map) const;
+    QPoint findEscapePointAround(const QPoint& bombPoint, const QVector<QVector<int>>& map) const;
 };

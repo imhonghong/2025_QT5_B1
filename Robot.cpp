@@ -2,10 +2,11 @@
 #include "PathFinder.h"
 #include "WaterBomb.h"
 #include "BattleScene.h"
+#include "HashUtil.h"
 
 #include <QDebug>
 #include <QVector>
-
+#include <QSet>
 
 Robot::Robot() {}
 
@@ -14,26 +15,75 @@ void Robot::generatePlan(const QVector<QVector<int>>& map, const QPoint& playerP
     stepIndex = 0;
 
     PathFinder pf(map);
-    QVector<QPoint> path = pf.findPath(getGridPos(), playerPos);
+    PathResult res = pf.findPath(getGridPos(), playerPos);
 
-    if (path.isEmpty()) {
+    if (res.path.isEmpty()) {
         qDebug() << "[Robot] 找不到通往 player 的路徑";
         return;
     }
-    qDebug() << "[Robot] path length: " << path.size();
-    qDebug() << "[Robot] 計算路徑:" << path;
 
-
-
-    for (int i = 1; i < path.size(); ++i) {
-        plan.push_back({ RobotAction::MoveTo, path[i] });
+    const QVector<QPoint>& path = res.path;
+    QSet<QPoint> bombSet;
+    for (const QPoint& p : res.bombSpots) {
+        bombSet.insert(p);
     }
 
-    // 模擬放水球 + 倒退一步 + 等待引爆
-    plan.push_back({ RobotAction::PlaceBomb, path.last() });
-    if (path.size() >= 2)
-        plan.push_back({ RobotAction::MoveTo, path[path.size() - 2] });
-    plan.push_back({ RobotAction::Wait, path[path.size() - 2], 3 });
+    qDebug() << "[Robot] path:" << path;
+    qDebug() << "[Robot] bombSpots:" << res.bombSpots;
+
+    for (int i = 1; i < path.size(); ++i) {
+        const QPoint& current = path[i];
+
+        // 一般移動
+        plan.push_back({ RobotAction::MoveTo, current });
+
+        // 若是炸彈點，插入炸退腳本
+        if (bombSet.contains(current)) {
+            // 放炸彈
+            plan.push_back({ RobotAction::PlaceBomb, current });
+
+            // 回退（逐格倒退兩步）
+            int stepsBack = 0;
+            for (int j = i - 1; j > 0 && stepsBack < 2; --j) {
+                plan.push_back({ RobotAction::MoveTo, path[j] });
+                stepsBack++;
+            }
+
+            // 找不到兩步就用 fallback
+            if (stepsBack < 2) {
+                QPoint alt = findEscapePointAround(current, map);
+                if (alt != current)
+                    plan.push_back({ RobotAction::MoveTo, alt });
+            }
+
+            // 等待
+            plan.push_back({ RobotAction::Wait, getGridPos(), 190 });
+        }
+    }
+}
+
+
+bool Robot::isSafeToRetreat(const QPoint& bombPoint, const QVector<QPoint>& path, const QVector<QVector<int>>& map) const {
+    int idx = path.indexOf(bombPoint);
+    if (idx < 2) return false;
+
+    QPoint escape = path[idx - 2];
+    if (escape.y() < 0 || escape.y() >= map.size()) return false;
+    if (escape.x() < 0 || escape.x() >= map[0].size()) return false;
+
+    return map[escape.y()][escape.x()] == 0;
+}
+
+QPoint Robot::findEscapePointAround(const QPoint& bombPoint, const QVector<QVector<int>>& map) const {
+    for (int dx = -2; dx <= 2; ++dx) {
+        for (int dy = -2; dy <= 2; ++dy) {
+            if (abs(dx) + abs(dy) != 2) continue;
+            QPoint p = bombPoint + QPoint(dx, dy);
+            if (p.x() < 0 || p.x() >= map[0].size() || p.y() < 0 || p.y() >= map.size()) continue;
+            if (map[p.y()][p.x()] == 0) return p;
+        }
+    }
+    return bombPoint;  // fallback: 沒得逃就站原地（雖然會被炸死）
 }
 
 void Robot::advanceStep() {
@@ -50,6 +100,7 @@ void Robot::advanceStep() {
             else if (delta == QPoint(1, 0)) setDirection(Direction::Right);
 
             setGridPos(current.pos);
+            qDebug() << "Move to: " << current.pos;
             isMoving = true;
             nextFrame(4);
             break;
@@ -58,6 +109,7 @@ void Robot::advanceStep() {
             if (scene) {
                 WaterBomb* bomb = new WaterBomb(current.pos);
                 scene->addWaterBomb(bomb);
+                qDebug() << "Place Bomb at: " << current.pos;
                 isMoving = false;
             }
             break;
@@ -65,6 +117,7 @@ void Robot::advanceStep() {
         case RobotAction::Wait: {
             if (current.wait > 1) {
                 current.wait--;
+                qDebug() << "Wait at: " << current.pos;
                 isMoving = false;
                 return;
             }

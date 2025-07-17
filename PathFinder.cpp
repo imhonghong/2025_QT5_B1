@@ -23,7 +23,7 @@ int PathFinder::getCost(QPoint pt) {
     return 9999;                                        // 不可走
 }
 
-QVector<QPoint> PathFinder::findPath(QPoint start, QPoint end) {
+QVector<QPoint> PathFinder::bfs(QPoint start, QPoint end) {
     QHash<QPoint, int> dist;
     QHash<QPoint, QPoint> prev;
     QQueue<QPoint> q;
@@ -66,4 +66,46 @@ QVector<QPoint> PathFinder::findPath(QPoint start, QPoint end) {
     }
     path.prepend(start);
     return path;
+}
+
+PathResult PathFinder::findPath(QPoint start, QPoint player) {
+    QVector<QPoint> goals = {
+        player + QPoint(1, 0),
+        player + QPoint(-1, 0),
+        player + QPoint(0, 1),
+        player + QPoint(0, -1)
+    };
+
+    // 遍歷候選終點，挑出最佳路徑
+    QVector<QPoint> bestPath;
+    int minCost = 999999;
+
+    for (const QPoint& g : goals) {
+        if (!isValid(g)) continue;
+        if (getCost(g) >= 9999) continue;
+
+        QVector<QPoint> p = bfs(start, g);  // 👈 呼叫你封裝的 bfs()
+        if (!p.isEmpty() && p.size() < minCost) {
+            bestPath = p;
+            minCost = p.size();
+        }
+    }
+
+    // 掃描路徑中是否有需要炸的牆
+    PathResult result;
+    result.path = bestPath;
+
+    for (int i = 0; i < bestPath.size() - 1; ++i) {
+        QPoint curr = bestPath[i];
+        QPoint next = bestPath[i + 1];
+        QPoint dir = next - curr;
+        QPoint ahead = next + dir;
+
+        if (isValid(ahead) && map[ahead.y()][ahead.x()] == 1) {
+            result.bombSpots.append(next); // 在 next 放炸彈
+        }
+    }
+    result.bombSpots.append(bestPath[bestPath.size()-1]);
+
+    return result;
 }
