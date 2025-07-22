@@ -109,6 +109,7 @@
         <file>data/character/P_wd_2.png</file>
         <file>data/character/P_wn_1.png</file>
         <file>data/character/P_wn_2.png</file>
+        <file>data/character/P_die.png</file>
     </qresource>
     <qresource prefix="/PlayerTurtule">
         <file>data/character/PT_walk_down_1.png</file>

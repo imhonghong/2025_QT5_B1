@@ -13,6 +13,7 @@ SOURCES += \
     EndingScene.cpp \
     Explosion.cpp \
     GameControllerMode1.cpp \
+    GameControllerMode2.cpp \
     MapLoader.cpp \
     Monster.cpp \
     Octopus.cpp \
@@ -31,6 +32,7 @@ HEADERS += \
     EndingScene.h \
     Explosion.h \
     GameControllerMode1.h \
+    GameControllerMode2.h \
     GameMode.h \
     HashUtil.h \
     IGameController.h \

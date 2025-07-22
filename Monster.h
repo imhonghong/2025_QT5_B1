@@ -1,16 +1,37 @@
 #pragma once
+#include <QObject>
 #include "Character.h"
 #include <QString>
+#include "QPainter"
 
-class Monster : public Character {
+class Monster : public QObject, public Character {
+    Q_OBJECT
+
 public:
-    Monster() = default;
+    Monster(const QPoint& pos);
+    Monster(const QPoint& pos, const QRect& roamZone, bool clockwise);
+
+    QString getFrameKey() const override;
+    void paint(QPainter* painter);
 
     void setMovePattern(const QString& p) { pattern = p; }
     QString getMovePattern() const { return pattern; }
 
-    void updateMovement(); // 預留：依照 pattern 更新座標
+    void updateMovement();
 
 private:
-    QString pattern; // "clockwise", "counterclockwise", "left-right", "tracker"
+    QString pattern;
+    float moveSpeed = 0.02f;
+    QRect roamZone;
+    bool clockwise = true;
+    Direction currentDir = Direction::Right;
+    QPoint gridTarget;
+    bool isMoving = false;
+
+    bool isOnEdge(const QPoint& p) const;
+    Direction nextDirection(Direction dir, bool cw) const;
+    void initStartDirection(const QPoint& pos);
+
+    float frameTimer = 0.0f;         // 幀更新累積時間
+    float frameInterval = 0.2f;      // 每 0.2 秒切一次動畫
 };

@@ -1,15 +1,18 @@
 #pragma once
+#include <QObject>
 #include "Character.h"
 
-class Octopus : public Character {
+class Octopus : public QObject, public Character {
+    Q_OBJECT
+
 public:
-    Octopus() = default;
-
+    Octopus();
     void hit(); // 被炸彈打中一次
-    bool isDead() const;
-
+    bool isDead() const override;
     void updateAI(); // 預留：依照玩家位置移動/攻擊
 
+    QString getFrameKey() const override;
+
 private:
-    int hp = 6; // 被打中 6 次死亡
+    int hp = 6;
 };

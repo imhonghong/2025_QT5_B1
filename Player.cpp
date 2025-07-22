@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "IGameController.h"
+#include "SpriteSheetManager.h"
 
 #include <QTimer>
 #include <QDebug>
@@ -94,6 +95,23 @@ QString Player::getFrameKey() const {
     case PlayerState::Dead:
         return "P_die";
     }
-
     return "P_stand_down_1";
+}
+
+QRect Player::getCollisionBox() const {
+    QPixmap sprite = SpriteSheetManager::instance().getFrame(getFrameKey());
+
+    // 假設顯示時是寬度 50 等比縮放
+    int displayWidth = 50;
+    int displayHeight = sprite.height() * displayWidth / sprite.width();
+
+    QPointF pos = getScreenPos(); // 螢幕座標
+
+    // 回傳圖片下半部作為碰撞區域
+    return QRect(
+        pos.x(),
+        pos.y() + displayHeight - 50, // 從下往上 50
+        displayWidth,
+        50
+    );
 }

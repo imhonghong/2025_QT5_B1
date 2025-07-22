@@ -21,6 +21,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(battleScene, &BattleScene::backToTitle, this, &MainWindow::backToTitle);
     connect(battleScene, &BattleScene::gameEnded, this, &MainWindow::showEnding);
     connect(endingScene, &EndingScene::backToTitle, this, &MainWindow::backToTitle);
+    connect(battleScene, &BattleScene::pauseRequested, this, &MainWindow::pauseGame);
+    connect(battleScene, &BattleScene::returnToMainMenu, this, &MainWindow::backToTitle);
 
     stack->setCurrentWidget(titleScene);
 }
@@ -31,8 +33,9 @@ void MainWindow::startGame(GameMode mode) {
         battleScene->setController(controller);
         stack->setCurrentWidget(battleScene);
     } else {
-        QMessageBox::information(this, "模式尚未實作", "Mode 2 尚未實作！");
-        stack->setCurrentWidget(titleScene);
+        IGameController* controller = new GameControllerMode2();  // ✅ 使用你剛實作的 controller
+        battleScene->setController(controller);                   // ✅ 設定 controller
+        stack->setCurrentWidget(battleScene);
     }
 }
 
@@ -43,4 +46,8 @@ void MainWindow::backToTitle() {
 void MainWindow::showEnding(bool isWin) {
     endingScene->setup(isWin);
     stack->setCurrentWidget(endingScene);
+}
+
+void MainWindow::pauseGame() {
+    battleScene->togglePause();  // 切換是否暫停
 }

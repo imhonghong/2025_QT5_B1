@@ -40,6 +40,7 @@ public:
     void update(float delta);
 
     void enterTrappedState();
+    int getNeedleCount() const { return needleCount; }
     void tryRescue();               // 使用針戳破水球
     void onTrappedTimeout();       // 倒數三秒後觸發
     bool getIsTrapped() const { return state == PlayerState::Trapped; }
@@ -50,6 +51,7 @@ public:
     void takeDamage(int dmg = 1) override;
     void onDie() override;
     QString getFrameKey() const override;
+    QRect getCollisionBox() const override;
 
 signals:
     void requestEndGame(bool isWin);
@@ -58,6 +60,7 @@ private:
     IGameController* controller = nullptr;
 
     int maxHp = 3;
+    int needleCount = 0;
 
     // 漂浮倒數計時
     QTimer* trappedTimer = nullptr;

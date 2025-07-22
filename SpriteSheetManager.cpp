@@ -77,6 +77,7 @@ void SpriteSheetManager::loadAllSprites() {
     framePixmaps.insert("P_wd_2", QPixmap(":/Player/data/character/P_wd_2.png"));
     framePixmaps.insert("P_wn_1", QPixmap(":/Player/data/character/P_wn_1.png"));
     framePixmaps.insert("P_wn_2", QPixmap(":/Player/data/character/P_wn_2.png"));
+    framePixmaps.insert("P_die", QPixmap(":/Player/data/character/P_die.png"));
     //player-turtle
     framePixmaps.insert("PT_walk_down_1", QPixmap(":/PlayerTurtule/data/character/PT_walk_down_1.png"));
     framePixmaps.insert("PT_walk_down_2", QPixmap(":/PlayerTurtule/data/character/PT_walk_down_2.png"));

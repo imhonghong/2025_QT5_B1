@@ -2,6 +2,10 @@
 #include <QPoint>
 #include <QPointF>
 #include <QString>
+#include <QRect>
+#include <QSize>
+#include <QPixmap>
+#include "SpriteSheetManager.h"
 
 enum class Direction {
     Down,
@@ -55,9 +59,23 @@ public:
 
     // --- 貼圖取得 ---
     virtual QString getFrameKey() const = 0;  // 每個角色實作自己的 key
-    void nextFrame(int mod) { frameIndex = (frameIndex + 1) % mod+1; }
+    void nextFrame(int mod) {
+        frameIndex++;
+        if (frameIndex > mod) frameIndex = 1;
+    }
     void resetFrame() { frameIndex = 1; }
     int getFrameIndex() const { return frameIndex; }
+
+    // --- 碰撞區 ---
+    virtual QRect getCollisionBox() const {
+            // 預設回傳整張圖大小作為碰撞框
+            QPixmap sprite = SpriteSheetManager::instance().getFrame(getFrameKey());
+            int displayWidth = 50;
+            int displayHeight = sprite.height() * displayWidth / sprite.width();
+            QPointF pos = getScreenPos();
+            return QRect(pos.x(), pos.y(), displayWidth, displayHeight);
+        }
+
 
 protected:
     QPoint gridPos = {-1, -1};

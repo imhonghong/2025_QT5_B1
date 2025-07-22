@@ -79,6 +79,7 @@ void Explosion::applyEffects() {
 
     for (const ExplosionFlame& f : flames) {
         QPoint p = f.pos;
+        QRect flameRect = QRect(gridToScreen(p), QSize(50, 50));
 
         // 🎯 Robot
         if (robot && robot->getGridPos() == p) {
@@ -87,21 +88,21 @@ void Explosion::applyEffects() {
             // 之後可呼叫 robot->die()
         }
         // 🎯 Player
-        if (player && player->getGridPos() == p) {
+        if (player && player->getCollisionBox().intersects(flameRect)) {
             player->takeDamage(1);
             qDebug() << "[Explosion] Player take damage at " << p;
             // 之後可呼叫 player->die()
         }
         // 🎯 Monsters
         for (Monster* m : monsters) {
-            if (m && m->getGridPos() == p) {
+            if (m && m->getCollisionBox().intersects(flameRect)) {
                 qDebug() << "[Explosion] Monster 被炸死 at" << p;
                 // 之後可呼叫 m->die()
             }
         }
         // 🎯 Octopi
         for (Octopus* o : octopi) {
-            if (o && o->getGridPos() == p) {
+            if (o && o->getCollisionBox().intersects(flameRect)) {
                 qDebug() << "[Explosion] Octopus 被炸死 at" << p;
                 // 之後可呼叫 o->hit()
             }
