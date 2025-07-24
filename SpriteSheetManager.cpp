@@ -56,18 +56,29 @@ void SpriteSheetManager::loadAllSprites() {
     framePixmaps.insert("P_walk_down_2", QPixmap(":/Player/data/character/P_walk_down_2.png"));
     framePixmaps.insert("P_walk_down_3", QPixmap(":/Player/data/character/P_walk_down_3.png"));
     framePixmaps.insert("P_walk_down_4", QPixmap(":/Player/data/character/P_walk_down_4.png"));
+    framePixmaps.insert("P_walk_down_5", QPixmap(":/Player/data/character/P_walk_down_5.png"));
+    framePixmaps.insert("P_walk_down_6", QPixmap(":/Player/data/character/P_walk_down_6.png"));
+
     framePixmaps.insert("P_walk_left_1", QPixmap(":/Player/data/character/P_walk_left_1.png"));
     framePixmaps.insert("P_walk_left_2", QPixmap(":/Player/data/character/P_walk_left_2.png"));
     framePixmaps.insert("P_walk_left_3", QPixmap(":/Player/data/character/P_walk_left_3.png"));
     framePixmaps.insert("P_walk_left_4", QPixmap(":/Player/data/character/P_walk_left_4.png"));
+    framePixmaps.insert("P_walk_left_5", QPixmap(":/Player/data/character/P_walk_left_5.png"));
+    framePixmaps.insert("P_walk_left_6", QPixmap(":/Player/data/character/P_walk_left_6.png"));
+
     framePixmaps.insert("P_walk_right_1", QPixmap(":/Player/data/character/P_walk_right_1.png"));
     framePixmaps.insert("P_walk_right_2", QPixmap(":/Player/data/character/P_walk_right_2.png"));
     framePixmaps.insert("P_walk_right_3", QPixmap(":/Player/data/character/P_walk_right_3.png"));
     framePixmaps.insert("P_walk_right_4", QPixmap(":/Player/data/character/P_walk_right_4.png"));
+    framePixmaps.insert("P_walk_right_5", QPixmap(":/Player/data/character/P_walk_right_5.png"));
+    framePixmaps.insert("P_walk_right_6", QPixmap(":/Player/data/character/P_walk_right_6.png"));
+
     framePixmaps.insert("P_walk_up_1", QPixmap(":/Player/data/character/P_walk_up_1.png"));
     framePixmaps.insert("P_walk_up_2", QPixmap(":/Player/data/character/P_walk_up_2.png"));
     framePixmaps.insert("P_walk_up_3", QPixmap(":/Player/data/character/P_walk_up_3.png"));
     framePixmaps.insert("P_walk_up_4", QPixmap(":/Player/data/character/P_walk_up_4.png"));
+    framePixmaps.insert("P_walk_up_5", QPixmap(":/Player/data/character/P_walk_up_5.png"));
+    framePixmaps.insert("P_walk_up_6", QPixmap(":/Player/data/character/P_walk_up_6.png"));
     //player-waterball/needle/die
     framePixmaps.insert("P_wb_1", QPixmap(":/Player/data/character/P_wb_1.png"));
     framePixmaps.insert("P_wb_2", QPixmap(":/Player/data/character/P_wb_2.png"));

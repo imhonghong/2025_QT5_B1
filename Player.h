@@ -43,6 +43,7 @@ public:
     void setController(IGameController* controller);
     void update(float delta);
     void setScene(BattleScene* s);
+    QPoint getStartPos(int waveIndex);
 
     void enterTrappedState();
     int getNeedleCount() const { return needleCount; }
@@ -50,9 +51,11 @@ public:
     void tryPlaceWaterBomb();   //放水球
     void onTrappedTimeout();       // 倒數三秒後觸發
     bool getIsTrapped() const { return state == PlayerState::Trapped; }
+    void setStateStanding();
 
     void addItem(ItemType item);
     bool hasItem(ItemType item) const;
+    void removeItem(ItemType item) { itemSet.remove(item); }
 
     void takeDamage(int dmg = 1) override;
     void onDie() override;
@@ -69,6 +72,7 @@ signals:
 private:
     IGameController* controller = nullptr;
     BattleScene* scene = nullptr;
+    QPoint startGridPos;
 
     int maxHp = 3;
     int needleCount = 0;
@@ -77,14 +81,19 @@ private:
     // 漂浮倒數計時
     QTimer* trappedTimer = nullptr;
     QSet<ItemType> itemSet;
+    int trappedFrameIndex = 0;
+    QTimer* trappedAnimTimer = nullptr;
+    QTimer* recoverTimer = nullptr; // 浮完泡泡再復活
+    int recoverFrameCount = 0;      // P_wd_1/2 frame index
 
     PlayerState state = PlayerState::Standing;
-
     Direction currentMoveDir = Direction::Down; // 現在正在移動方向
-    int moveSpeed = 60;                         // 預設速度
+    int moveSpeed = 75;                         // 預設速度
     QSet<Direction> activeKeys;                 // 正在按的方向鍵
 
     QPoint getNearestGridPos() const; //放水球整數點
+
+
 };
 
 

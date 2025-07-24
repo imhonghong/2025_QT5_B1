@@ -1,4 +1,5 @@
 #include "WaterBomb.h"
+#include "BattleScene.h"
 #include "SpriteSheetManager.h"
 #include <QDebug>
 
@@ -6,6 +7,12 @@ WaterBomb::WaterBomb(QPoint pos, QObject* parent)
     : QObject(parent), gridPos(pos) {
     timer.start();
 }
+
+WaterBomb::WaterBomb(QPoint gridPos, BattleScene* scene, Player* owner)
+    : QObject(scene), gridPos(gridPos), owner(owner) {
+    timer.start();
+}
+
 
 QPoint WaterBomb::getGridPos() const {
     return gridPos;

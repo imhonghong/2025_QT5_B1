@@ -77,50 +77,65 @@ void Explosion::applyEffects() {
     const QVector<Monster*>& monsters = scene->getMonsters();
     const QVector<Octopus*>& octopi = scene->getOctopi();
 
-    for (const ExplosionFlame& f : flames) {
-        QPoint p = f.pos;
-        QRect flameRect = QRect(gridToScreen(p), QSize(50, 50));
+    if (hasAppliedEffect) return;
+    hasAppliedEffect = true;
 
-        // 🎯 Robot
-        if (robot && robot->getGridPos() == p) {
-            qDebug() << "[Explosion] Robot 被炸死 at" << p;
-            robot->takeDamage(1);
-            // 之後可呼叫 robot->die()
-        }
-        // 🎯 Player
-        if (player && player->getCollisionBox().intersects(flameRect)) {
-            player->takeDamage(1);
-            qDebug() << "[Explosion] Player take damage at " << p;
-            // 之後可呼叫 player->die()
-        }
-        // 🎯 Monsters
-        for (Monster* m : monsters) {
-            if (m && m->getCollisionBox().intersects(flameRect)) {
-                qDebug() << "[Explosion] Monster 被炸死 at" << p;
-                // 之後可呼叫 m->die()
-            }
-        }
-        // 🎯 Octopi
-        for (Octopus* o : octopi) {
-            if (o && o->getCollisionBox().intersects(flameRect)) {
-                qDebug() << "[Explosion] Octopus 被炸死 at" << p;
-                // 之後可呼叫 o->hit()
-            }
-        }
-        // 若是磚塊 → 爆破
-        if (scene->getMap(p) == 1) {  // 1 代表可炸磚
-            qDebug() << "[Explosion] 爆破磚塊 at" << p;
-            scene->setMap(p, 0);  // 設為空地
-        }
-        // 💣 引爆水球
-        for (WaterBomb* bomb : scene->getWaterBombs()) {
-            if (!bomb->getHasExploded() && bomb->getGridPos() == p) {
-                qDebug() << "[Explosion] 引爆水球 at" << p;
-                QTimer::singleShot(250, bomb, [bomb]() {
-                    bomb->explode();  // 延遲 0.25 秒觸發爆炸
-                });
-            }
-        }
-    }   // for Flame end
+    // 玩家處理
+    if (Player* p = scene->getPlayer()) {
+        qDebug() << "[Explosion] applyEffects triggered";
+        QRect playerBox = p->getCollisionBox();
 
+        for (const ExplosionFlame& f : flames) {
+            QPoint p = f.pos;
+            QRect flameRect = QRect(gridToScreen(p), QSize(50, 50));
+
+            // 🎯 Robot
+            if (robot && robot->getGridPos() == p) {
+                qDebug() << "[Explosion] Robot 被炸死 at" << p;
+                robot->takeDamage(1);
+                // 之後可呼叫 robot->die()
+            }
+            // 🎯 Player
+            if (playerBox.intersects(flameRect)) {
+                if (player->hasItem(ItemType::Turtle)) {
+                    player->removeItem(ItemType::Turtle);
+                    player->setStateStanding(); // 自動回復原本狀態
+                    qDebug() << "[Explosion] 玩家持有烏龜，切回 Standing";
+                } else {
+                    player->enterTrappedState(); // 進入 Trapped 狀態
+                    qDebug() << "[Explosion] 玩家被炸到，進入 Trapped";
+                }
+                break; // 被炸一次就好
+            }
+            // 🎯 Monsters
+            for (Monster* m : monsters) {
+                if (m && m->getCollisionBox().intersects(flameRect)) {
+                    m->takeDamage(1);
+                    qDebug() << "[Explosion] Monster takeDamage(1) at" << p;
+                    // 之後可呼叫 m->die()
+                }
+            }
+            // 🎯 Octopi
+            for (Octopus* o : octopi) {
+                if (o && o->getCollisionBox().intersects(flameRect)) {
+                    qDebug() << "[Explosion] Octopus 被炸死 at" << p;
+                    // 之後可呼叫 o->hit()
+                }
+            }
+            // 若是磚塊 → 爆破
+            if (scene->getMap(p) == 1) {  // 1 代表可炸磚
+                qDebug() << "[Explosion] 爆破磚塊 at" << p;
+                scene->setMap(p, 0);  // 設為空地
+            }
+            // 💣 引爆水球
+            for (WaterBomb* bomb : scene->getWaterBombs()) {
+                if (!bomb->getHasExploded() && bomb->getGridPos() == p) {
+                    qDebug() << "[Explosion] 引爆水球 at" << p;
+                    QTimer::singleShot(250, bomb, [bomb]() {
+                        bomb->explode();  // 延遲 0.25 秒觸發爆炸
+                    });
+                }
+            }
+        }   // for Flame end
+    } //player end
 }

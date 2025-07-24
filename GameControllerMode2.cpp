@@ -79,6 +79,8 @@ void GameControllerMode2::checkWaveCleared() {
     }
 }
 
+
+
 QPoint GameControllerMode2::initWave0() {
     currentWave = 0;
 

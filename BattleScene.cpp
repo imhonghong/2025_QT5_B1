@@ -107,7 +107,7 @@ void BattleScene::addWaterBomb(WaterBomb* bomb) {
 }
 
 void BattleScene::addWaterBomb(QPoint gridPos, Player* owner) {
-    WaterBomb* bomb = new WaterBomb(gridPos, this);
+    WaterBomb* bomb = new WaterBomb(gridPos, this, owner);
     waterBombs.append(bomb);
 
     qDebug() << "[BattleScene] Add WaterBomb at" << gridPos;
@@ -265,8 +265,7 @@ void BattleScene::paintPlayer(QPainter& painter, SpriteSheetManager& sheet) {
         default: directionStr = "down"; break;
     }
 
-    QString playerKey = QString("P_stand_%2_1").arg(directionStr);
-    QPixmap playerImg = sheet.getFrame(playerKey);
+    QPixmap playerImg = SpriteSheetManager::instance().getFrame(p->getFrameKey());
     if (playerImg.isNull()) {
         painter.setBrush(Qt::red);
         painter.drawEllipse(QRect(pos.x(), pos.y(), 50, 50));
@@ -435,6 +434,26 @@ bool BattleScene::checkCollision(const QRect& box) const {
                 QRect brickBox(x * 50, y * 50, 50, 50);
                 if (box.intersects(brickBox)) return true;
             }
+        }
+    }
+
+    // 檢查是否撞到未爆炸的水球
+    Player* player = getPlayer(); // 對 Mode2 有效
+
+    for (WaterBomb* bomb : waterBombs) {
+        QRect bombRect(bomb->getGridPos() * 50, QSize(50, 50));
+
+        // 如果還在自己剛剛放的水球內，且未完全離開，不阻擋
+        if (bomb->getOwner() == player) {
+            if (!bomb->hasPlayerLeft()) {
+                // 玩家還沒完全離開自己剛放的水球，不視為阻擋
+                continue;
+            }
+        }
+
+        if (box.intersects(bombRect)) {
+            qDebug() << "[Collision] 撞到水球 at" << bomb->getGridPos();
+            return true;
         }
     }
 

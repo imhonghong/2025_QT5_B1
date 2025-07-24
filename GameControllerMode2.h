@@ -30,4 +30,5 @@ private:
     QVector<QVector<int>> map;
     QPoint initWave0();
     QPoint initWave1();
+
 };

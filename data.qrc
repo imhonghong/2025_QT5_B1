@@ -110,6 +110,14 @@
         <file>data/character/P_wn_1.png</file>
         <file>data/character/P_wn_2.png</file>
         <file>data/character/P_die.png</file>
+        <file>data/character/P_walk_down_5.png</file>
+        <file>data/character/P_walk_down_6.png</file>
+        <file>data/character/P_walk_left_5.png</file>
+        <file>data/character/P_walk_left_6.png</file>
+        <file>data/character/P_walk_right_5.png</file>
+        <file>data/character/P_walk_right_6.png</file>
+        <file>data/character/P_walk_up_5.png</file>
+        <file>data/character/P_walk_up_6.png</file>
     </qresource>
     <qresource prefix="/PlayerTurtule">
         <file>data/character/PT_walk_down_1.png</file>

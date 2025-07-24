@@ -17,7 +17,18 @@ void Player::setController(IGameController* ctrl) {
 }
 
 void Player::update(float delta) {
-    if (state == PlayerState::Dead || state == PlayerState::Trapped) return;
+
+    if (state == PlayerState::Dead) {
+        qDebug() << "[Player] is dead, frame" << frameIndex;
+        frameIndex++; // 可視為播放動畫時的更新
+        return;
+    }
+
+    if (state == PlayerState::Trapped) {
+        // 不要更新 frameIndex，改由 trappedAnimTimer 控制動畫播放
+        return;
+    }
+
     if (activeKeys.isEmpty()) {
         state = PlayerState::Standing;
         return;
@@ -52,20 +63,57 @@ void Player::update(float delta) {
         frameIndex++;
     }
 
+    // 玩家移動後的 collisionBox
+    QRect box = getCollisionBox();
+
+    for (WaterBomb* bomb : scene->getWaterBombs()) {
+        if (bomb->getOwner() == this) {
+            QRect bombBox(bomb->getGridPos().x() * 50, bomb->getGridPos().y() * 50, 50, 50);
+            if (!box.intersects(bombBox)) {
+                bomb->setPlayerHasLeft(true);  // ✅ 呼叫 set flag
+            }
+        }
+    }
+
     qDebug() << "[Player::update] 移動中: state=" << static_cast<int>(state)/* << " pos=" << screenPos*/;
 }
 
-void Player::enterTrappedState() {
-    if (state == PlayerState::Trapped || state == PlayerState::Dead) return;
-    state = PlayerState::Trapped;
-    if (!trappedTimer) {
-        trappedTimer = new QTimer(this);
-        trappedTimer->setSingleShot(true);
-        connect(trappedTimer, &QTimer::timeout, this, &Player::onTrappedTimeout);
-    }
-    trappedTimer->start(3000);
-    qDebug() << "[Player] 被水球困住，開始漂浮";
+void Player::setStateStanding() {
+    if (hasItem(ItemType::Turtle))
+        state = PlayerState::TurtleStanding;
+    else
+        state = PlayerState::Standing;
 }
+
+void Player::enterTrappedState() {
+    if (state == PlayerState::Trapped) return;
+
+    qDebug() << "[Player] Entering trapped state";
+    state = PlayerState::Trapped;
+    trappedFrameIndex = 0;
+
+    if (trappedAnimTimer) {
+        trappedAnimTimer->stop();
+        delete trappedAnimTimer;
+    }
+    trappedAnimTimer = new QTimer(this);
+    connect(trappedAnimTimer, &QTimer::timeout, this, [=]() {
+        if (++trappedFrameIndex >= 4) { // 只播4張圖
+            trappedAnimTimer->stop();
+        }
+    });
+    trappedAnimTimer->start(750); // 播 4 張圖 / 3 秒 = 每張 750ms
+
+    if (trappedTimer) {
+        trappedTimer->stop();
+        delete trappedTimer;
+    }
+    trappedTimer = new QTimer(this);
+    connect(trappedTimer, &QTimer::timeout, this, &Player::onTrappedTimeout);
+    trappedTimer->setSingleShot(true);
+    trappedTimer->start(3000); // 3 秒後觸發
+}
+
 
 void Player::tryRescue() {
     if (state != PlayerState::Trapped) return;
@@ -75,11 +123,35 @@ void Player::tryRescue() {
 }
 
 void Player::onTrappedTimeout() {
-    if (state != PlayerState::Trapped) return;
-    state = PlayerState::Standing;  // 或 TurtleStanding
-    takeDamage(1);
-    qDebug() << "[Player] 漂浮時間結束，扣血";
+    qDebug() << "[Player] Trapped time up!";
+
+    if (hasItem(ItemType::Needle)) {
+        needleCount--;
+        removeItem(ItemType::Needle);
+        setStateStanding();
+    } else {
+        // 播 P_wd_1 / 2 共 0.5 秒再 respawn
+        state = PlayerState::Dead;
+        recoverFrameCount = 0;
+
+        if (recoverTimer) {
+            recoverTimer->stop();
+            delete recoverTimer;
+        }
+        recoverTimer = new QTimer(this);
+        connect(recoverTimer, &QTimer::timeout, this, [=]() {
+            if (++recoverFrameCount >= 2) {
+                recoverTimer->stop();
+                takeDamage(1);
+                setGridPos(getStartPos(0));
+                qDebug() <<"[Player]onTrappedTimeout() startGridPos" <<startGridPos;
+                setStateStanding();
+            }
+        });
+        recoverTimer->start(250); // 兩張共0.5秒
+    }
 }
+
 
 void Player::addItem(ItemType item) {
     if (item == ItemType::ExtraBomb)
@@ -122,15 +194,15 @@ QString Player::getFrameKey() const {
     case PlayerState::Standing:
         return QString("P_stand_%1_1").arg(dirStr);
     case PlayerState::Walking:
-        return QString("P_walk_%1_%2").arg(dirStr).arg(frameIndex % 4 + 1);
+        return QString("P_walk_%1_%2").arg(dirStr).arg(frameIndex % 6 + 1);
     case PlayerState::TurtleStanding:
         return QString("PT_walk_%1_1").arg(dirStr);
     case PlayerState::TurtleWalking:
         return QString("PT_walk_%1_%2").arg(dirStr).arg(frameIndex % 2 + 1);
     case PlayerState::Trapped:
-        return QString("P_wb_%1").arg(frameIndex % 4  +1);
+        return QString("P_wb_%1").arg(trappedFrameIndex  % 4  +1);
     case PlayerState::Dead:
-        return "P_die";
+        return QString("P_wd_%1").arg(frameIndex %2 +1);
     }
     return "P_stand_down_1";
 }
@@ -208,3 +280,13 @@ void Player::tryPlaceWaterBomb() {
     qDebug() << "[Player] 放置炸彈成功";
 }
 
+QPoint Player::getStartPos(int waveIndex){
+    if (waveIndex == 0){
+        return QPoint(5,8);
+    } else if (waveIndex == 1){
+        return QPoint(5,8);
+    }
+    else{
+        return QPoint(0,0);
+    }
+}
