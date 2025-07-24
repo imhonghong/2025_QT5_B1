@@ -75,6 +75,8 @@ void Player::update(float delta) {
         }
     }
 
+    if (invincible) invincibleFrameCounter++;
+
     qDebug() << "[Player::update] 移動中: state=" << static_cast<int>(state)/* << " pos=" << screenPos*/;
 }
 
@@ -165,24 +167,52 @@ bool Player::hasItem(ItemType item) const {
 }
 
 void Player::takeDamage(int dmg) {
+    if (invincible || isDead()) {
+        qDebug() << "[Player] 無敵中，忽略傷害";
+        return;
+    }
+
     hp -= dmg;
     qDebug() << "[Player] 受到傷害，剩餘 HP:" << hp;
+
     if (hp <= 0) {
         onDie();
+        return;
     }
+
+    invincible = true;
+    qDebug() << "[Player] 進入無敵狀態";
+
+    if (!invincibleTimer) {
+        invincibleTimer = new QTimer(this);
+        invincibleTimer->setSingleShot(true);
+        connect(invincibleTimer, &QTimer::timeout, this, [this]() {
+            invincible = false;
+            qDebug() << "[Player] 無敵結束";
+        });
+    }
+    invincibleTimer->start(2000);
 }
+
 
 void Player::onDie() {
     qDebug() << "[Player] 死亡！可加入動畫或結束遊戲邏輯";
-    state = PlayerState::Dead;
 
     if (controller && controller->getMode() == GameMode::Mode1) {
         emit requestEndGame(true);  // Robot 贏
+    }
+    if (controller && controller->getMode() == GameMode::Mode2) {
+        emit requestEndGame(false);  // player 輸
     }
 }
 
 QString Player::getFrameKey() const {
     QString dirStr;
+
+    if (invincible && (invincibleFrameCounter / 4) % 2 == 0) {
+        return "";  // 空字串表示不顯示
+    }
+
     switch (getDirection()) {
         case Direction::Down: dirStr = "down"; break;
         case Direction::Left: dirStr = "left"; break;
@@ -208,7 +238,18 @@ QString Player::getFrameKey() const {
 }
 
 QRect Player::getCollisionBox() const {
-    QPixmap sprite = SpriteSheetManager::instance().getFrame(getFrameKey());
+    QString key = getFrameKey();
+    if (key.isEmpty()) {
+        // 若為無敵閃爍，則保留固定大小碰撞框
+        QPointF pos = getScreenPos();
+        return QRect(pos.x(), pos.y(), 46, 46);
+    }
+
+    QPixmap sprite = SpriteSheetManager::instance().getFrame(key);
+    if (sprite.isNull()) {
+        QPointF pos = getScreenPos();
+        return QRect(pos.x(), pos.y(), 46, 46);
+    }
 
     // 假設顯示時是寬度 50 等比縮放
     int displayWidth = 50;

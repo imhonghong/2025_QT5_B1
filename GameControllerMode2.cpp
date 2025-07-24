@@ -4,7 +4,13 @@
 
 void GameControllerMode2::initialize(BattleScene* s) {
     scene = s;
+    connect(scene, &BattleScene::monsterRemoved, this, [=](Monster* m){
+        qDebug() << "[Controller] Remove monster from controller:" << m;
+        monsters.removeAll(m);  // ✅ 防止使用到 deleted monster
+    });
+
     loadWave(0);
+    connect(player, &Player::requestEndGame, scene, &BattleScene::gameEnded);
 }
 
 void GameControllerMode2::reset() {
@@ -19,18 +25,24 @@ Player* GameControllerMode2::getPlayer() const {
 
 void GameControllerMode2::update(float delta) {
     checkWaveCleared();
-    for (Monster* m : monsters)
-        m->updateMovement();
-    // 可加上時間控制等
     if (player) {
         player->update(delta);  // ✅ 加這行
+    }
+
+    for (Monster* m : monsters){
+        m->updateMovement();
+        if (!player->isDead() && m->getCollisionBox().intersects(player->getCollisionBox())) {
+            player->takeDamage(1);  // 玩家會自行處理無敵狀態與閃爍
+            qDebug() << "[Controller] Player collided with monster:" << m;
+        }
+    // 可加上時間控制等
     }
 }
 
 void GameControllerMode2::clearMonsters() {
     for (Monster* m : monsters) {
         scene->removeItem(m);
-        delete m;
+        // delete m;
     }
     monsters.clear();
 }

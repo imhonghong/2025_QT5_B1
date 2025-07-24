@@ -1,6 +1,9 @@
 #include "Monster.h"
 #include "SpriteSheetManager.h"
+#include "BattleScene.h"
 #include <cmath>
+#include <QTimer>
+#include <QDebug>
 
 Monster::Monster(const QPoint& pos) {
     setGridPos(pos);
@@ -20,6 +23,8 @@ Monster::Monster(const QPoint& pos, const QRect& roam, bool cw)
 
 QString Monster::getFrameKey() const {
     QString dir;
+    if (isDying) return QString("M_die_%1").arg(getFrameIndex());
+
     switch (getDirection()) {
         case Direction::Down:  dir = "down"; break;
         case Direction::Left:  dir = "left"; break;
@@ -52,7 +57,34 @@ bool Monster::isOnEdge(const QPoint& p) const {
     );
 }
 
+void Monster::onDie() {
+    if (isDying) return;
+    isDying = true;
+    // setHp(0);
+    resetFrame();  // 死亡動畫從 frame1 開始
+
+    // 播放動畫：每 500ms 換一次 frame
+    frameUpdateTimer = new QTimer(this);
+    connect(frameUpdateTimer, &QTimer::timeout, this, [this]() {
+        if (getFrameIndex() < 4)
+            nextFrame(4);
+    });
+    frameUpdateTimer->start(500);
+
+    deathTimer = new QTimer(this);
+    connect(deathTimer, &QTimer::timeout, this, [this]() {
+        if (frameUpdateTimer) frameUpdateTimer->stop();
+        emit requestDelete(this);
+    });
+    deathTimer->start(2000);
+    qDebug() << "[Monster] Died and request deletion:" << this;
+}
+
+
 void Monster::updateMovement() {
+
+    if (isDying) return;  // ✅ 死亡後不再移動
+
     if (!isMoving) {
         // 計算下一個 grid 目標
         QPoint currGrid = getGridPos();
@@ -66,8 +98,16 @@ void Monster::updateMovement() {
         }
 
         if (isOnEdge(next)) {
-            gridTarget = next;
-            isMoving = true;
+            QRect nextBox(next.x() * 50, next.y() * 50, 50, 50);
+            // 加入碰撞檢查（牆、水球）
+            if (!scene || scene->checkCollision(nextBox) || scene->hasWaterBomb(next)){
+                currentDir = nextDirection(currentDir, clockwise);
+            }
+            else {
+                gridTarget = next;
+                isMoving = true;
+            }
+            setDirection(currentDir);
         } else {
             currentDir = nextDirection(currentDir, clockwise);
             setDirection(currentDir);

@@ -172,6 +172,10 @@ void SpriteSheetManager::loadAllSprites() {
 }
 
 QPixmap SpriteSheetManager::getFrame(const QString &frameName) const {
+    if (frameName.isEmpty()) {
+        qWarning() << "[SpriteSheetManager] Empty frameKey requested";
+        return QPixmap();
+    }
     if (!framePixmaps.contains(frameName)) {
         qDebug() << "SpriteSheetManager: Frame not found:" << frameName;
         return QPixmap();

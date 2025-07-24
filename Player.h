@@ -65,6 +65,8 @@ public:
     void addMoveKey(Direction dir);
     void removeMoveKey(Direction dir);
 
+    bool isInvincible() const { return invincible; }
+
 
 signals:
     void requestEndGame(bool isWin);
@@ -92,6 +94,10 @@ private:
     QSet<Direction> activeKeys;                 // 正在按的方向鍵
 
     QPoint getNearestGridPos() const; //放水球整數點
+
+    QTimer* invincibleTimer = nullptr;
+    bool invincible = false;
+    int invincibleFrameCounter = 0;  // private 區
 
 
 };

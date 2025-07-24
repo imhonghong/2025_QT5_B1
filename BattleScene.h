@@ -63,6 +63,7 @@ signals:
     void gameEnded(bool isWin);
     void pauseRequested();
     void returnToMainMenu();
+    void monsterRemoved(Monster* m);
 
 private:
     QVector<QVector<int>> mapData;

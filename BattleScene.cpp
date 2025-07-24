@@ -93,6 +93,8 @@ void BattleScene::paintEvent(QPaintEvent*) {
 
 void BattleScene::addMonster(Monster* m) {
     monsters.push_back(m);
+    m->setScene(this);
+    connect(m, &Monster::requestDelete, this, &BattleScene::removeItem);
     update();
 }
 
@@ -176,18 +178,20 @@ void BattleScene::removeItem(QObject* item) {
     // 嘗試從場上移除怪物或章魚
     if (Monster* m = qobject_cast<Monster*>(item)) {
         monsters.removeAll(m);
+        emit monsterRemoved(m);
     } else if (Octopus* o = qobject_cast<Octopus*>(item)) {
         octopi.removeAll(o);
     }
 
     item->deleteLater();  // 安全移除
+    qDebug() << "[BattleScene] removeItem called on" << item;
 }
 
 
 void BattleScene::clearScene() {
     // 清除怪物與章魚
     for (Monster* m : monsters)
-        delete m;
+        removeItem(m);
     monsters.clear();
 
     for (Octopus* o : octopi)
@@ -254,6 +258,14 @@ void BattleScene::paintPlayer(QPainter& painter, SpriteSheetManager& sheet) {
 
     Player* p = controller ? controller->getPlayer() : nullptr;
     if (!p) return;
+
+    QString frameKey = p->getFrameKey();
+    if (frameKey.isEmpty()) {
+        // 無敵閃爍時不顯示
+        qDebug() << "[PaintPlayer] 無敵閃爍，跳過繪製";
+        return;
+    }
+
     QPointF pos = p->getScreenPos();
 
     QString directionStr;
@@ -266,6 +278,8 @@ void BattleScene::paintPlayer(QPainter& painter, SpriteSheetManager& sheet) {
     }
 
     QPixmap playerImg = SpriteSheetManager::instance().getFrame(p->getFrameKey());
+
+
     if (playerImg.isNull()) {
         painter.setBrush(Qt::red);
         painter.drawEllipse(QRect(pos.x(), pos.y(), 50, 50));
