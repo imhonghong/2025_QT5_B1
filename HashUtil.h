@@ -16,3 +16,4 @@ inline uint qHash(Monster* const& key, uint seed = 0) {
 inline uint qHash(Octopus* const& key, uint seed = 0) {
     return qHash(reinterpret_cast<quintptr>(key), seed);
 }
+

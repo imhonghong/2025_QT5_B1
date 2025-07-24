@@ -17,11 +17,14 @@ Player* GameControllerMode2::getPlayer() const {
     return player;
 }
 
-void GameControllerMode2::update(float /*delta*/) {
+void GameControllerMode2::update(float delta) {
     checkWaveCleared();
     for (Monster* m : monsters)
         m->updateMovement();
     // 可加上時間控制等
+    if (player) {
+        player->update(delta);  // ✅ 加這行
+    }
 }
 
 void GameControllerMode2::clearMonsters() {
@@ -148,32 +151,23 @@ QPoint GameControllerMode2::initWave1() {
 
     QRect roamZone1(2, 2, 7, 5);
     QRect roamZone2(0, 0, 11, 9);
-    Monster* m1 = new Monster(QPoint(3, 2), roamZone1, true);
-    Monster* m2 = new Monster(QPoint(2, 6), roamZone1, false);
-    Monster* m3 = new Monster(QPoint(6, 2), roamZone1, true);
-    Monster* m4 = new Monster(QPoint(6, 6), roamZone1, false);
-    Monster* m5 = new Monster(QPoint(3, 2), roamZone1, true);
-    Monster* m6 = new Monster(QPoint(2, 6), roamZone1, false);
-    Monster* m7 = new Monster(QPoint(3, 2), roamZone1, true);
-    Monster* m8 = new Monster(QPoint(2, 6), roamZone1, false);
-    scene->addMonster(m1);
-    monsters.push_back(m1);
-    scene->addMonster(m2);
-    monsters.push_back(m2);
-    scene->addMonster(m3);
-    monsters.push_back(m3);
-    scene->addMonster(m4);
-    monsters.push_back(m4);
+    Monster* m1 = new Monster(QPoint(0, 4), roamZone1, true);
+    Monster* m2 = new Monster(QPoint(0, 4), roamZone1, true);
+    Monster* m3 = new Monster(QPoint(8, 4), roamZone1, false);
+    Monster* m4 = new Monster(QPoint(8, 4), roamZone1, false);
+    Monster* m5 = new Monster(QPoint(10, 0), roamZone2, true);
+    Monster* m6 =new Monster(QPoint(10, 0), roamZone2, true);
+    Monster* m7 = new Monster(QPoint(4, 0), roamZone2, false);
+    Monster* m8 = new Monster(QPoint(4, 0), roamZone2, false);
+    scene->addMonster(m1);  monsters.push_back(m1);
+    scene->addMonster(m2);  monsters.push_back(m2);
+    scene->addMonster(m3);  monsters.push_back(m3);
+    scene->addMonster(m4);  monsters.push_back(m4);
+    scene->addMonster(m5);  monsters.push_back(m5);
+    scene->addMonster(m6);  monsters.push_back(m6);
+    scene->addMonster(m7);  monsters.push_back(m7);
+    scene->addMonster(m8);  monsters.push_back(m8);
 
-    scene->addMonster(new Monster(QPoint(0, 4), roamZone2, true));
-    monsters.push_back(new Monster(QPoint(0, 4), roamZone2, true));
-    scene->addMonster(new Monster(QPoint(8, 4), roamZone2, false));
-    monsters.push_back(new Monster(QPoint(8, 4), roamZone2, false));
-    scene->addMonster(new Monster(QPoint(10, 0), roamZone2, true));
-    monsters.push_back(new Monster(QPoint(10, 0), roamZone2, true));
-    scene->addMonster(new Monster(QPoint(4, 0), roamZone2, false));
-    monsters.push_back(new Monster(QPoint(4, 0), roamZone2, false));
 
     return QPoint(5, 8); // player 起始位置
 }
-

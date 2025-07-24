@@ -7,12 +7,15 @@
 #include <QDebug>
 
 BattleScene::BattleScene(QWidget *parent)
-    : QWidget(parent) {}
+    : QWidget(parent) {
+    setFocusPolicy(Qt::StrongFocus);  // 允許接受鍵盤事件
+    setFocus();                       // 主動取得焦點
+    qDebug() << "[BattleScene] Focus set for key input.";
+}
 
 QPoint BattleScene::getPlayerGridPos() const {
-    if (player)
-        return player->getGridPos();
-    return QPoint(-1, -1);
+    Player* p = getPlayer();
+    return p ? p->getGridPos() : QPoint(-1, -1);
 }
 
 QVector<QVector<int>> BattleScene::getCurrentMap() const {
@@ -39,9 +42,6 @@ void BattleScene::setMap(const QVector<QVector<int>>& map) {
     update();
 }
 
-void BattleScene::setPlayer(Player* p) {
-    player = p;
-}
 
 void BattleScene::setRobot(Robot* r) {
     robot = r;
@@ -58,7 +58,19 @@ void BattleScene::setController(IGameController* c) {
             update();
         }
     });
+    setFocus();
     updateTimer.start(16);  // 每 16ms 執行一次
+}
+
+void BattleScene::bindPlayerForMode1(Player* p) {
+    // 僅允許 Mode1 設定 player
+    if (controller && controller->getMode() == GameMode::Mode1) {
+        qDebug() << "[BattleScene] Set player for Mode1";
+        p->setScene(this); // ⭐ 關鍵：設定 scene
+        p->setController(controller);
+    } else {
+        qWarning() << "[BattleScene] setPlayer() 只允許在 Mode1 呼叫";
+    }
 }
 
 void BattleScene::paintEvent(QPaintEvent*) {
@@ -71,9 +83,10 @@ void BattleScene::paintEvent(QPaintEvent*) {
     paintPlayer(painter,sheet);
     paintMonsters(painter);     // ✅ 畫出 monster
     paintRobot(painter);        // ✅ 畫出 robot
+    paintUI(painter);
     paintWaterBombs(painter);   // ✅ 畫出水球
     paintExplosions(painter);   // ✅ 畫出水球爆炸
-    paintUI(painter);
+
 
 }
 
@@ -93,11 +106,44 @@ void BattleScene::addWaterBomb(WaterBomb* bomb) {
     update();
 }
 
-void BattleScene::addPlayer(Player* p, const QPoint& pos) {
-    player = p;
-    player->setGridPos(pos);
-    qDebug() << "[BattleScene] add player at" << pos;
+void BattleScene::addWaterBomb(QPoint gridPos, Player* owner) {
+    WaterBomb* bomb = new WaterBomb(gridPos, this);
+    waterBombs.append(bomb);
+
+    qDebug() << "[BattleScene] Add WaterBomb at" << gridPos;
+
+    connect(bomb, &WaterBomb::exploded, this, [=](QPoint center){
+        qDebug() << "[BattleScene] Bomb exploded at" << center;
+        explosions.append(new Explosion(center, this));
+    });
+
     update();
+}
+
+bool BattleScene::hasWaterBomb(const QPoint& gridPos) const {
+    for (WaterBomb* b : waterBombs) {
+        if (b->getGridPos() == gridPos)
+            return true;
+    }
+    return false;
+}
+
+int BattleScene::getWaterBombCount(Player* owner) const {
+    int count = 0;
+    for (WaterBomb* b : waterBombs) {
+        if (b->parent() == owner)
+            ++count;
+    }
+    return count;
+}
+
+void BattleScene::addPlayer(Player* p, const QPoint& pos) {
+    if (p) {
+        p->setScene(this);  // 傳給 player battleScene
+        p->setGridPos(pos);
+        qDebug() << "[BattleScene] add player at" << pos;
+        update();
+    }
 }
 
 void BattleScene::addBrick(const QPoint& pos, int type) {
@@ -110,10 +156,6 @@ void BattleScene::addBrick(const QPoint& pos, int type) {
 
 const QVector<WaterBomb*>& BattleScene::getWaterBombs() const {
     return waterBombs;
-}
-
-Player* BattleScene::getPlayer() const {
-    return player;
 }
 
 Robot* BattleScene::getRobot() const {
@@ -162,9 +204,9 @@ void BattleScene::clearScene() {
     explosions.clear();
 
     // 玩家、機器人等也一併清除（如果有的話）
-    if (player) {
-        delete player;
-        player = nullptr;
+    Player* p = getPlayer();
+    if (p) {
+        delete p; // 不設為 nullptr，因為你沒儲存這個指標
     }
 
     if (robot) {
@@ -210,11 +252,12 @@ void BattleScene::paintMap(QPainter& painter, SpriteSheetManager& sheet, int cel
 void BattleScene::paintPlayer(QPainter& painter, SpriteSheetManager& sheet) {
     if (!controller || !controller->getPlayer()) return;
 
-    Player* player = controller->getPlayer();
-    QPointF pos = player->getScreenPos();
+    Player* p = controller ? controller->getPlayer() : nullptr;
+    if (!p) return;
+    QPointF pos = p->getScreenPos();
 
     QString directionStr;
-    switch (player->getDirection()) {
+    switch (p->getDirection()) {
         case Direction::Down:  directionStr = "down"; break;
         case Direction::Up:    directionStr = "up"; break;
         case Direction::Left:  directionStr = "left"; break;
@@ -222,7 +265,7 @@ void BattleScene::paintPlayer(QPainter& painter, SpriteSheetManager& sheet) {
         default: directionStr = "down"; break;
     }
 
-    QString playerKey = QString("P_stand_%1_1").arg(directionStr);
+    QString playerKey = QString("P_stand_%2_1").arg(directionStr);
     QPixmap playerImg = sheet.getFrame(playerKey);
     if (playerImg.isNull()) {
         painter.setBrush(Qt::red);
@@ -230,13 +273,15 @@ void BattleScene::paintPlayer(QPainter& painter, SpriteSheetManager& sheet) {
         return;
     }
 
-    // 等比縮放寬度為 50
-    int displayWidth = 50;
-    int displayHeight = playerImg.height() * displayWidth / playerImg.width();
-
-    int offsetY = displayHeight - 50;
-    QRect drawRect(pos.x(), pos.y() - offsetY, displayWidth, displayHeight);  // ⭐ 向上位移
+    QRect drawRect(pos.x(), pos.y() - (playerImg.height() - 50), 50, playerImg.height());
     painter.drawPixmap(drawRect, playerImg);
+
+    // 顯示碰撞框
+    if (Player* p = getPlayer()) {
+        QRect rect = p->getCollisionBox();
+        painter.setPen(QPen(Qt::red, 2));
+        painter.drawRect(rect);
+    }
 }
 
 
@@ -336,4 +381,62 @@ void BattleScene::mousePressEvent(QMouseEvent* event) {
 
 void BattleScene::togglePause() {
     isPaused = !isPaused;
+}
+
+void BattleScene::keyPressEvent(QKeyEvent* event) {
+    if (isPaused) return;
+
+    Player* player = getPlayer();  // 已定義於 header
+    if (!player) {
+        qDebug() << "[Scene] player is nullptr";
+        return;
+    }
+
+    switch (event->key()) {
+    case Qt::Key_Up:
+        player->addMoveKey(Direction::Up);
+        break;
+    case Qt::Key_Down:
+        player->addMoveKey(Direction::Down);
+        break;
+    case Qt::Key_Left:
+        player->addMoveKey(Direction::Left);
+        break;
+    case Qt::Key_Right:
+        player->addMoveKey(Direction::Right);
+        break;
+    case Qt::Key_Space:
+        qDebug() << "[Scene] 按下 Space 鍵";
+        player->tryPlaceWaterBomb();  // ✅ 呼叫放水球
+        break;
+    }
+}
+
+void BattleScene::keyReleaseEvent(QKeyEvent* event) {
+    Player* p = getPlayer();
+    if (!p) return;
+    switch (event->key()) {
+        case Qt::Key_Up:    p->removeMoveKey(Direction::Up); break;
+        case Qt::Key_Down:  p->removeMoveKey(Direction::Down); break;
+        case Qt::Key_Left:  p->removeMoveKey(Direction::Left); break;
+        case Qt::Key_Right: p->removeMoveKey(Direction::Right); break;
+    }
+}
+
+bool BattleScene::checkCollision(const QRect& box) const {
+    for (const Monster* m : monsters) {
+        if (box.intersects(m->getCollisionBox())) return true;
+    }
+
+    for (int y = 0; y < mapData.size(); ++y) {
+        for (int x = 0; x < mapData[y].size(); ++x) {
+            int type = mapData[y][x];
+            if (type == 1 || type == 2 || type == 3 || type == 6 || type == 7) { // 不可穿越磚
+                QRect brickBox(x * 50, y * 50, 50, 50);
+                if (box.intersects(brickBox)) return true;
+            }
+        }
+    }
+
+    return false;
 }

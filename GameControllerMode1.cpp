@@ -23,7 +23,7 @@ void GameControllerMode1::initialize(BattleScene* scene) {
                 player = new Player();
                 player->setGridPos(QPoint(x, y));
                 player->setDirection(Direction::Down);
-                scene->setPlayer(player);
+                scene->bindPlayerForMode1(player);
                 player->setController(this);
                 connect(player, &Player::requestEndGame, scene, &BattleScene::gameEnded);
                 break;  // 一次只有一位 player，找到就離開

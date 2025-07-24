@@ -23,39 +23,40 @@ public:
     void setMap(const QVector<QVector<int>>& map); //for read txt
     void incrementStepCount() { ++stepCount; update(); }
     Robot* getRobot() const;
+    void setRobot(Robot* r);
+    void addWaterBomb(WaterBomb* bomb); //for robot
 
     // mode2
+    Player* getPlayer() const {
+        return controller ? controller->getPlayer() : nullptr;
+    }
     void addMonster(Monster* monster);
     void addPlayer(Player* p, const QPoint& pos);
     void addBrick(const QPoint& pos, int type);
     void removeItem(QObject* item);
     void clearScene();
-
+    bool checkCollision(const QRect& box) const;
+    void addWaterBomb(QPoint gridPos, Player* owner);  // for Player
+    bool hasWaterBomb(const QPoint& gridPos) const;
+    int getWaterBombCount(Player* owner) const;
     // mode1+2
     int getMap(const QPoint& p) const; //單格地圖
     QVector<QVector<int>> getCurrentMap() const; //尋路用，整張地圖
     void setMap(const QPoint& p, int val); //for explosion
-
-    void setPlayer(Player* player);
-    void setRobot(Robot* r);
+    void bindPlayerForMode1(Player* p);
     void setController(IGameController* c);
-
     QPoint getPlayerGridPos() const; //尋路用
-
-    Player* getPlayer() const;
 
     const QVector<Monster*>& getMonsters() const;
     const QVector<Octopus*>& getOctopi() const;
-
-
-    void addWaterBomb(WaterBomb* bomb);
     const QVector<WaterBomb*>& getWaterBombs() const;
-
     void togglePause();
 
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
+    void keyPressEvent(QKeyEvent* event) override;
+    void keyReleaseEvent(QKeyEvent* event) override;
 
 signals:
     void backToTitle();
@@ -67,7 +68,7 @@ private:
     QVector<QVector<int>> mapData;
 
     // characters
-    Player* player = nullptr;
+    // Player* player = nullptr;
     Robot* robot = nullptr;
     IGameController* controller = nullptr;
     QVector<Monster*> monsters;

@@ -68,13 +68,13 @@ public:
 
     // --- 碰撞區 ---
     virtual QRect getCollisionBox() const {
-            // 預設回傳整張圖大小作為碰撞框
-            QPixmap sprite = SpriteSheetManager::instance().getFrame(getFrameKey());
-            int displayWidth = 50;
-            int displayHeight = sprite.height() * displayWidth / sprite.width();
-            QPointF pos = getScreenPos();
-            return QRect(pos.x(), pos.y(), displayWidth, displayHeight);
-        }
+        // 預設回傳整張圖大小作為碰撞框
+        QPixmap sprite = SpriteSheetManager::instance().getFrame(getFrameKey());
+        int displayWidth = 50;
+        int displayHeight = sprite.height() * displayWidth / sprite.width();
+        QPointF pos = getScreenPos();
+        return QRect(pos.x(), pos.y(), displayWidth, displayHeight);
+    }
 
 
 protected:
