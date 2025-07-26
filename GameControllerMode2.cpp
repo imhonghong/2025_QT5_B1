@@ -91,6 +91,13 @@ void GameControllerMode2::checkWaveCleared() {
     }
 }
 
+void GameControllerMode2::setScene(BattleScene* s) {
+    scene = s;
+    scene->setController(this);
+    scene->setMode(GameMode::Mode2);  // ✅ <--- 新增這行設定 mode 為 Mode2
+    qDebug() << "[GameControllerMode2] setScene() → mode = " << static_cast<int>(scene->getMode());
+}
+
 
 
 QPoint GameControllerMode2::initWave0() {

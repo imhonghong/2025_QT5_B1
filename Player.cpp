@@ -19,7 +19,7 @@ void Player::setController(IGameController* ctrl) {
 void Player::update(float delta) {
 
     if (state == PlayerState::Dead) {
-        qDebug() << "[Player] is dead, frame" << frameIndex;
+        // qDebug() << "[Player] is dead, frame" << frameIndex;
         frameIndex++; // 可視為播放動畫時的更新
         return;
     }
@@ -54,6 +54,22 @@ void Player::update(float delta) {
     QRect newBox = getCollisionBox().translated(offset.toPoint());
     if (!scene->checkCollision(newBox)) {
         screenPos += offset;
+
+        // 地圖邊界
+        constexpr int mapWidth = 11;
+        constexpr int mapHeight = 9;
+
+        if (hasItem(ItemType::MoonWalk)) {
+            if (screenPos.x() < 0) screenPos.setX((mapWidth - 1) * 50);
+            else if (screenPos.x() >= mapWidth * 50) screenPos.setX(0);
+
+            if (screenPos.y() < 0) screenPos.setY((mapHeight - 1) * 50);
+            else if (screenPos.y() >= mapHeight * 50) screenPos.setY(0);
+        } else {
+            // 沒有 MoonWalk 時，限制邊界
+            screenPos.setX(qBound(0.0, screenPos.x(), (mapWidth - 1) * 50.0));
+            screenPos.setY(qBound(0.0, screenPos.y(), (mapHeight - 1) * 50.0));
+        }
 
         // ✅ 成功移動後決定狀態
         if (hasItem(ItemType::Turtle))
@@ -100,8 +116,7 @@ void Player::update(float delta) {
     }
 
     if (invincible) invincibleFrameCounter++;
-
-    qDebug() << "[Player::update] 移動中: state=" << static_cast<int>(state)/* << " pos=" << screenPos*/;
+    // qDebug() << "[Player::update] 移動中: state=" << static_cast<int>(state) << " pos=" << screenPos;
 }
 
 void Player::setStateStanding() {
@@ -225,6 +240,12 @@ void Player::takeDamage(int dmg) {
         return;
     }
 
+    if (hasItem(ItemType::Turtle)) {
+        qDebug() << "[Player] 被撞到但有烏龜，進入破殼狀態";
+        onTurtleBreak();
+        return;
+    }
+
     hp -= dmg;
     qDebug() << "[Player] 受到傷害，剩餘 HP:" << hp;
 
@@ -328,7 +349,7 @@ void Player::setScene(BattleScene *s){
 
 void Player::addMoveKey(Direction dir) {
     activeKeys.insert(dir);
-    qDebug() << "[Player] 按下方向鍵:" << static_cast<int>(dir);
+    // qDebug() << "[Player] 按下方向鍵:" << static_cast<int>(dir);
 }
 
 void Player::removeMoveKey(Direction dir) {
@@ -404,4 +425,25 @@ void Player::updateMoveSpeed() {
     }
 
     qDebug() << "[Player] 更新速度為：" << moveSpeed;
+}
+
+void Player::onTurtleBreak() {
+    removeItem(ItemType::Turtle);
+    updateMoveSpeed();
+    setStateStanding();
+
+    // 開啟無敵
+    invincible = true;
+    invincibleFrameCounter = 0;
+
+    if (!invincibleTimer) {
+        invincibleTimer = new QTimer(this);
+        invincibleTimer->setSingleShot(true);
+        connect(invincibleTimer, &QTimer::timeout, this, [this]() {
+            invincible = false;
+            qDebug() << "[Player] 無敵結束 (來自 turtle)";
+        });
+    }
+    invincibleTimer->start(2000);
+    qDebug() << "[Player] onTurtleBreak: 移除 turtle + 進入無敵";
 }

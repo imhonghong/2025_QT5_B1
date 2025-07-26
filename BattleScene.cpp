@@ -274,8 +274,6 @@ void BattleScene::paintPlayer(QPainter& painter, SpriteSheetManager& sheet) {
 
     QString frameKey = p->getFrameKey();
     if (frameKey.isEmpty()) {
-        // 無敵閃爍時不顯示
-        qDebug() << "[PaintPlayer] 無敵閃爍，跳過繪製";
         return;
     }
 

@@ -34,7 +34,8 @@ void MainWindow::startGame(GameMode mode) {
         stack->setCurrentWidget(battleScene);
     } else {
         IGameController* controller = new GameControllerMode2();  // ✅ 使用你剛實作的 controller
-        battleScene->setController(controller);                   // ✅ 設定 controller
+        battleScene->setController(controller);
+        battleScene->setMode(GameMode::Mode2);
         stack->setCurrentWidget(battleScene);
     }
 }

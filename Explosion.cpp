@@ -101,9 +101,11 @@ void Explosion::applyEffects() {
                 bool effectRemoved = false;
 
                 if (player->hasItem(ItemType::Turtle)) {
-                    player->removeItem(ItemType::Turtle);
+                    player->onTurtleBreak();
+                    qDebug() << "[Explosion] 玩家炸到烏龜壞了 -> 清除 turtle + 無敵";
                     effectRemoved = true;
-                    qDebug() << "[Explosion] 玩家被炸，移除 Turtle";
+                    break;
+
                 }
 
                 if (player->hasItem(ItemType::SpeedShoes)) {
@@ -141,11 +143,13 @@ void Explosion::applyEffects() {
             // 若是磚塊 → 爆破
             if (scene->getMap(p) == 1) {
                 scene->setMap(p, 0);
-                int r = QRandomGenerator::global()->bounded(7);
-                ItemType type = static_cast<ItemType>(r);
-                Item* item = new Item(type, p);
-                scene->addItem(item);
-                qDebug() << "[Explosion] 爆炸產生 item" << item->getName() << "at" << p;
+                if (scene->getMode() == GameMode::Mode2){
+                    int r = QRandomGenerator::global()->bounded(7);
+                    ItemType type = static_cast<ItemType>(r);
+                    Item* item = new Item(type, p);
+                    scene->addItem(item);
+                    qDebug() << "[Explosion] 爆炸產生 item" << item->getName() << "at" << p;
+                }
             }
             // 💣 引爆水球
             for (WaterBomb* bomb : scene->getWaterBombs()) {

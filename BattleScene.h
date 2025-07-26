@@ -46,6 +46,9 @@ public:
     QVector<Item*>& getItems(); // 讓 player 檢查
 
     // mode1+2
+    GameMode getMode() const { return mode; }
+    void setMode(GameMode m){ mode = m; }
+
     int getMap(const QPoint& p) const; //單格地圖
     QVector<QVector<int>> getCurrentMap() const; //尋路用，整張地圖
     void setMap(const QPoint& p, int val); //for explosion
@@ -107,5 +110,7 @@ private:
 
     // pause
     bool isPaused = false;
+
+    GameMode mode;
 
 };

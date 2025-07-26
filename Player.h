@@ -44,6 +44,7 @@ public:
     void tryRescue();               // 使用針戳破水球
     void tryPlaceWaterBomb();       //放水球
     void onTrappedTimeout();        // 倒數三秒後觸發
+    void onTurtleBreak();
     bool getIsTrapped() const { return state == PlayerState::Trapped; }
     void setStateStanding();
 

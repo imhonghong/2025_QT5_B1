@@ -16,6 +16,8 @@ public:
     QVector<Robot*> getRobots() const override { return {}; }
     GameMode getMode() const override { return GameMode::Mode2; }
     void reset() override;
+    void setScene(BattleScene* s);
+
 
 private:
     BattleScene* scene = nullptr;
