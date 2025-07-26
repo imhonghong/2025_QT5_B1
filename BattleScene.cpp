@@ -2,6 +2,7 @@
 #include "GameControllerMode1.h"
 #include "SpriteSheetManager.h"
 #include "Robot.h"
+#include "Item.h"
 
 #include <QPainter>
 #include <QDebug>
@@ -83,9 +84,10 @@ void BattleScene::paintEvent(QPaintEvent*) {
     paintPlayer(painter,sheet);
     paintMonsters(painter);     // ✅ 畫出 monster
     paintRobot(painter);        // ✅ 畫出 robot
-    paintUI(painter);
+    paintItems(painter);
     paintWaterBombs(painter);   // ✅ 畫出水球
     paintExplosions(painter);   // ✅ 畫出水球爆炸
+    paintUI(painter);
 
 
 }
@@ -117,6 +119,17 @@ void BattleScene::addWaterBomb(QPoint gridPos, Player* owner) {
     connect(bomb, &WaterBomb::exploded, this, [=](QPoint center){
         qDebug() << "[BattleScene] Bomb exploded at" << center;
         explosions.append(new Explosion(center, this));
+    });
+
+    update();
+}
+
+void BattleScene::addWaterBomb(QPoint gridPos, Player* owner, int range) {
+    WaterBomb* bomb = new WaterBomb(gridPos, this, owner, range);
+    waterBombs.append(bomb);
+
+    connect(bomb, &WaterBomb::exploded, this, [=](QPoint center){
+        explosions.append(new Explosion(center, this, range));
     });
 
     update();
@@ -376,6 +389,15 @@ void BattleScene::paintUI(QPainter& painter) {
     }
 }
 
+void BattleScene::paintItems(QPainter &painter){
+    for (Item* item : items) {
+        QPoint pos = item->getScreenPos();
+        QString key = item->getName();
+        QPixmap pix = SpriteSheetManager::instance().getFrame(key);
+        painter.drawPixmap(pos.x(), pos.y(), 50, 50, pix);
+    }
+}
+
 void BattleScene::mousePressEvent(QMouseEvent* event) {
     QPoint pos = event->pos();
 
@@ -472,4 +494,13 @@ bool BattleScene::checkCollision(const QRect& box) const {
     }
 
     return false;
+}
+
+void BattleScene::addItem(Item* item) {
+    items.push_back(item);
+    update();
+}
+
+QVector<Item*>& BattleScene::getItems() {
+    return items;
 }

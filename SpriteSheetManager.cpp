@@ -16,13 +16,13 @@ void SpriteSheetManager::loadAllSprites() {
     framePixmaps.insert("brick_6", QPixmap(":/brick/data/brick/brick_6.png"));
     framePixmaps.insert("brick_7", QPixmap(":/brick/data/brick/brick_7.png"));
     //item
-    framePixmaps.insert("extra_water_ball", QPixmap(":/item/data/item/extra_water_balloons.png"));
-    framePixmaps.insert("glove", QPixmap(":/item/data/item/glove.png"));
-    framePixmaps.insert("moon_walk", QPixmap(":/item/data/item/moon_walk.png"));
-    framePixmaps.insert("needle", QPixmap(":/item/data/item/needle.png"));
-    framePixmaps.insert("power_potion", QPixmap(":/item/data/item/power_potion.png"));
-    framePixmaps.insert("speed_shoes", QPixmap(":/item/data/item/speed_shoes.png"));
-    framePixmaps.insert("turtle", QPixmap(":/item/data/item/turtle.png"));
+    framePixmaps.insert("ExtraBomb", QPixmap(":/item/data/item/extra_water_balloons.png"));
+    framePixmaps.insert("Glove", QPixmap(":/item/data/item/glove.png"));
+    framePixmaps.insert("MoonWalk", QPixmap(":/item/data/item/moon_walk.png"));
+    framePixmaps.insert("Needle", QPixmap(":/item/data/item/needle.png"));
+    framePixmaps.insert("PowerPotion", QPixmap(":/item/data/item/power_potion.png"));
+    framePixmaps.insert("SpeedShoes", QPixmap(":/item/data/item/speed_shoes.png"));
+    framePixmaps.insert("Turtle", QPixmap(":/item/data/item/turtle.png"));
     //moster
     framePixmaps.insert("M_die_1", QPixmap(":/Monster/data/character/M_die_1.png"));
     framePixmaps.insert("M_die_2", QPixmap(":/Monster/data/character/M_die_2.png"));
@@ -79,6 +79,7 @@ void SpriteSheetManager::loadAllSprites() {
     framePixmaps.insert("P_walk_up_4", QPixmap(":/Player/data/character/P_walk_up_4.png"));
     framePixmaps.insert("P_walk_up_5", QPixmap(":/Player/data/character/P_walk_up_5.png"));
     framePixmaps.insert("P_walk_up_6", QPixmap(":/Player/data/character/P_walk_up_6.png"));
+
     //player-waterball/needle/die
     framePixmaps.insert("P_wb_1", QPixmap(":/Player/data/character/P_wb_1.png"));
     framePixmaps.insert("P_wb_2", QPixmap(":/Player/data/character/P_wb_2.png"));

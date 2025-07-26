@@ -14,6 +14,7 @@
 #include "IGameController.h"
 #include "WaterBomb.h"
 #include "Explosion.h"
+#include "Item.h"
 
 class BattleScene : public QWidget {
     Q_OBJECT
@@ -37,8 +38,13 @@ public:
     void clearScene();
     bool checkCollision(const QRect& box) const;
     void addWaterBomb(QPoint gridPos, Player* owner);  // for Player
+    void addWaterBomb(QPoint gridPos, Player* owner, int range);
     bool hasWaterBomb(const QPoint& gridPos) const;
     int getWaterBombCount(Player* owner) const;
+
+    void addItem(Item* item);  // 新增
+    QVector<Item*>& getItems(); // 讓 player 檢查
+
     // mode1+2
     int getMap(const QPoint& p) const; //單格地圖
     QVector<QVector<int>> getCurrentMap() const; //尋路用，整張地圖
@@ -74,6 +80,7 @@ private:
     IGameController* controller = nullptr;
     QVector<Monster*> monsters;
     QVector<Octopus*> octopi;
+    QVector<Item*> items;
 
     // bombs
     QVector<WaterBomb*> waterBombs;
@@ -91,6 +98,7 @@ private:
     void paintWaterBombs(QPainter& painter);
     void paintExplosions(QPainter& painter);
     void paintRobot(QPainter& painter);
+    void paintItems(QPainter& painter);
 
     // UI
     void paintUI(QPainter& painter);

@@ -2,6 +2,7 @@
 #include "SpriteSheetManager.h"
 #include "BattleScene.h"
 #include <QDebug>
+#include <QRandomGenerator>
 
 inline QPoint gridToScreen(const QPoint& gridPos) {
     return QPoint(gridPos.x() * 50, gridPos.y() * 50);
@@ -97,15 +98,30 @@ void Explosion::applyEffects() {
             }
             // 🎯 Player
             if (playerBox.intersects(flameRect)) {
+                bool effectRemoved = false;
+
                 if (player->hasItem(ItemType::Turtle)) {
                     player->removeItem(ItemType::Turtle);
-                    player->setStateStanding(); // 自動回復原本狀態
-                    qDebug() << "[Explosion] 玩家持有烏龜，切回 Standing";
+                    effectRemoved = true;
+                    qDebug() << "[Explosion] 玩家被炸，移除 Turtle";
+                }
+
+                if (player->hasItem(ItemType::SpeedShoes)) {
+                    player->removeItem(ItemType::SpeedShoes);
+                    effectRemoved = true;
+                    qDebug() << "[Explosion] 玩家被炸，移除 SpeedShoes";
+                }
+
+                if (effectRemoved) {
+                    player->updateMoveSpeed();   // ✅ 重新計算速度
+                    player->setStateStanding();  // ✅ 回復正常狀態
+                    qDebug() << "[Explosion] 玩家被炸，狀態與速度重置";
                 } else {
-                    player->enterTrappedState(); // 進入 Trapped 狀態
+                    player->enterTrappedState(); // 原本邏輯
                     qDebug() << "[Explosion] 玩家被炸到，進入 Trapped";
                 }
-                break; // 被炸一次就好
+
+                break; // ✅ 僅炸一次
             }
             // 🎯 Monsters
             for (Monster* m : monsters) {
@@ -123,9 +139,13 @@ void Explosion::applyEffects() {
                 }
             }
             // 若是磚塊 → 爆破
-            if (scene->getMap(p) == 1) {  // 1 代表可炸磚
-                qDebug() << "[Explosion] 爆破磚塊 at" << p;
-                scene->setMap(p, 0);  // 設為空地
+            if (scene->getMap(p) == 1) {
+                scene->setMap(p, 0);
+                int r = QRandomGenerator::global()->bounded(7);
+                ItemType type = static_cast<ItemType>(r);
+                Item* item = new Item(type, p);
+                scene->addItem(item);
+                qDebug() << "[Explosion] 爆炸產生 item" << item->getName() << "at" << p;
             }
             // 💣 引爆水球
             for (WaterBomb* bomb : scene->getWaterBombs()) {

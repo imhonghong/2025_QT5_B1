@@ -13,6 +13,11 @@ WaterBomb::WaterBomb(QPoint gridPos, BattleScene* scene, Player* owner)
     timer.start();
 }
 
+WaterBomb::WaterBomb(QPoint gridPos, BattleScene* scene, Player* owner, int range)
+    : QObject(scene), gridPos(gridPos), owner(owner), range(range) {
+    timer.start();
+}
+
 
 QPoint WaterBomb::getGridPos() const {
     return gridPos;

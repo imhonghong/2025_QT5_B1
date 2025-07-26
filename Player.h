@@ -1,23 +1,17 @@
 #pragma once
 
 #include <QObject>
-#include "Character.h"
 #include <QSet>
 #include <QTimer>
 #include <QHash>
 
+#include "Item.h"
+#include "Character.h"
 
 class BattleScene;
 class IGameController;
 
-enum class ItemType {
-    Needle,
-    Turtle,
-    SpeedShoes,
-    ExtraBomb,
-    Glove,
-    MoonWalk
-};
+
 
 enum class PlayerState {
     Standing,
@@ -48,8 +42,8 @@ public:
     void enterTrappedState();
     int getNeedleCount() const { return needleCount; }
     void tryRescue();               // 使用針戳破水球
-    void tryPlaceWaterBomb();   //放水球
-    void onTrappedTimeout();       // 倒數三秒後觸發
+    void tryPlaceWaterBomb();       //放水球
+    void onTrappedTimeout();        // 倒數三秒後觸發
     bool getIsTrapped() const { return state == PlayerState::Trapped; }
     void setStateStanding();
 
@@ -59,11 +53,13 @@ public:
 
     void takeDamage(int dmg = 1) override;
     void onDie() override;
+    void updateMoveSpeed();
+
     QString getFrameKey() const override;
     QRect getCollisionBox() const override;
 
-    void addMoveKey(Direction dir);
-    void removeMoveKey(Direction dir);
+    void addMoveKey(Direction dir);     //移動
+    void removeMoveKey(Direction dir);  //移動
 
     bool isInvincible() const { return invincible; }
 
@@ -79,6 +75,7 @@ private:
     int maxHp = 3;
     int needleCount = 0;
     int extraBombCount = 0;
+    int powerPotionCount = 0;
 
     // 漂浮倒數計時
     QTimer* trappedTimer = nullptr;
@@ -98,6 +95,7 @@ private:
     QTimer* invincibleTimer = nullptr;
     bool invincible = false;
     int invincibleFrameCounter = 0;  // private 區
+
 
 
 };

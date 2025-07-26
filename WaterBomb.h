@@ -12,6 +12,7 @@ class WaterBomb : public QObject {
 public:
     WaterBomb(QPoint gridPos, QObject* parent = nullptr);
     WaterBomb(QPoint gridPos, BattleScene* scene, Player* owner);
+    WaterBomb(QPoint gridPos, BattleScene* scene, Player* owner, int range);
 
     QPoint getGridPos() const;
     QPixmap getCurrentPixmap() const;
@@ -23,6 +24,7 @@ public:
     void setPlayerHasLeft(bool val) { playerHasLeft = val; }
     bool hasPlayerLeft() const { return playerHasLeft; }
 
+    int getRange() const { return range; }
 signals:
     void exploded(QPoint center);  // 可連接後續爆炸影響
 
@@ -37,4 +39,5 @@ private:
 
     Player* owner;
     bool playerHasLeft = false;
+    int range = 3;
 };

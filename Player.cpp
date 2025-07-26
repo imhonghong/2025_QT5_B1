@@ -30,7 +30,7 @@ void Player::update(float delta) {
     }
 
     if (activeKeys.isEmpty()) {
-        state = PlayerState::Standing;
+        setStateStanding();
         return;
     }
 
@@ -54,13 +54,37 @@ void Player::update(float delta) {
     QRect newBox = getCollisionBox().translated(offset.toPoint());
     if (!scene->checkCollision(newBox)) {
         screenPos += offset;
-        state = PlayerState::Walking;
+
+        // ✅ 成功移動後決定狀態
+        if (hasItem(ItemType::Turtle))
+            state = PlayerState::TurtleWalking;
+        else
+            state = PlayerState::Walking;
+
+        frameIndex++;
     } else {
-        state = PlayerState::Standing;
+        setStateStanding();
     }
 
     if (state == PlayerState::Walking) {
         frameIndex++;
+    }
+
+    if (scene) {
+        QRect playerBox = getCollisionBox();
+        auto& items = scene->getItems();
+
+        for (int i = items.size() - 1; i >= 0; --i) {
+            Item* item = items[i];
+            QRect itemBox(item->getScreenPos(), QSize(50, 50));
+
+            if (playerBox.intersects(itemBox)) {
+                addItem(item->getType());
+                qDebug() << "[Player] 撿到 item:" << item->getName();
+                delete item;
+                items.removeAt(i);
+            }
+        }
     }
 
     // 玩家移動後的 collisionBox
@@ -156,11 +180,40 @@ void Player::onTrappedTimeout() {
 
 
 void Player::addItem(ItemType item) {
-    if (item == ItemType::ExtraBomb)
-        extraBombCount++;
-    else
-        itemSet.insert(item);
+    switch (item) {
+        case ItemType::Needle:
+            needleCount++;
+            qDebug() << "[Player] 拾取 Needle, 總數=" << needleCount;
+            break;
+        case ItemType::ExtraBomb:
+            extraBombCount++;
+            qDebug() << "[Player] 拾取 ExtraBomb, 最大數=" << extraBombCount;
+            break;
+        case ItemType::SpeedShoes:{
+           itemSet.insert(item);
+            updateMoveSpeed();
+            qDebug() << "[Player] 拾取 SpeedShoes, 移動速度=" << moveSpeed;
+            break;
+        }
+        case ItemType::Turtle:{
+            itemSet.insert(item);
+            state = PlayerState::TurtleStanding;
+            updateMoveSpeed();
+            break;
+        }
+        case ItemType::Glove:
+        case ItemType::MoonWalk:
+        case ItemType::PowerPotion:
+            powerPotionCount++;
+            itemSet.insert(item);
+            qDebug() << "[Player] 拾取 " << static_cast<int>(item) << "(特殊道具)";
+            break;
+        default:
+            qWarning() << "[Player] 未知道具";
+            break;
+    }
 }
+
 
 bool Player::hasItem(ItemType item) const {
     return itemSet.contains(item);
@@ -258,12 +311,15 @@ QRect Player::getCollisionBox() const {
     QPointF pos = getScreenPos(); // 螢幕座標
 
     // 回傳圖片下半部作為碰撞區域
-    return QRect(
-        pos.x(),
-        pos.y() + displayHeight - 46, // 從下往上 50
-        46,
-        46
-    );
+    int baseX = pos.x();
+    int baseY = pos.y() + displayHeight - 46;
+
+    // ✅ 如果是烏龜狀態，向上修正碰撞框
+    if (state == PlayerState::TurtleStanding || state == PlayerState::TurtleWalking) {
+        baseY -= 30;  // 視實際圖片而定，可微調
+    }
+
+    return QRect(baseX, baseY, 46, 46);
 }
 
 void Player::setScene(BattleScene *s){
@@ -301,6 +357,10 @@ void Player::tryPlaceWaterBomb() {
     QPoint gridPos = getNearestGridPos();
     int tile = scene->getMap(gridPos);
 
+    int range = 1 + (hasItem(ItemType::PowerPotion) ? powerPotionCount : 0);
+    if (range > 5) range = 5;
+    scene->addWaterBomb(gridPos, this, range);
+
     qDebug() << "[Player] 試圖放炸彈: gridPos=" << gridPos
              << "tile=" << tile << " bomb=" << current << "/" << maxBombs;
 
@@ -330,4 +390,18 @@ QPoint Player::getStartPos(int waveIndex){
     else{
         return QPoint(0,0);
     }
+}
+
+void Player::updateMoveSpeed() {
+    moveSpeed = 75;  // 預設
+
+    if (hasItem(ItemType::Turtle)) {
+        moveSpeed *= 0.8;
+    }
+
+    if (hasItem(ItemType::SpeedShoes)) {
+        moveSpeed *= 1.5;
+    }
+
+    qDebug() << "[Player] 更新速度為：" << moveSpeed;
 }

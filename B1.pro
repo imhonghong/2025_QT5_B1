@@ -14,6 +14,7 @@ SOURCES += \
     Explosion.cpp \
     GameControllerMode1.cpp \
     GameControllerMode2.cpp \
+    Item.cpp \
     MapLoader.cpp \
     Monster.cpp \
     Octopus.cpp \
@@ -36,6 +37,7 @@ HEADERS += \
     GameMode.h \
     HashUtil.h \
     IGameController.h \
+    Item.h \
     MainWindow.h \
     MapLoader.h \
     Monster.h \
