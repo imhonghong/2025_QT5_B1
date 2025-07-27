@@ -6,6 +6,7 @@
 
 #include <QPainter>
 #include <QDebug>
+#include <QGraphicsScene>
 
 BattleScene::BattleScene(QWidget *parent)
     : QWidget(parent) {
@@ -494,9 +495,50 @@ bool BattleScene::checkCollision(const QRect& box) const {
     return false;
 }
 
+bool BattleScene::checkCollisionExcludingMonsters(const QRect& box) const {
+    for (int y = 0; y < mapData.size(); ++y) {
+        for (int x = 0; x < mapData[y].size(); ++x) {
+            if (mapData[y][x] == 1 || mapData[y][x] == 2) {
+                QRect rect(x * 50, y * 50, 50, 50);
+                if (rect.intersects(box)) return true;
+            }
+        }
+    }
+
+    for (auto* bomb : waterBombs) {
+        QRect bombRect(bomb->getGridPos() * 50, QSize(50, 50));
+        if (bombRect.intersects(box)) return true;
+    }
+
+    return false;
+}
+
+
 void BattleScene::addItem(Item* item) {
+    // 安全設圖
+    QString key = item->getName();
+    QPixmap pix = SpriteSheetManager::instance().getFrame(key);
+    if (pix.isNull()) {
+        qWarning() << "[BattleScene] 無法載入圖片:" << key;
+    } else {
+        item->setPixmap(pix);
+    }
+
+    // 移除遞迴呼叫，直接加入到 items 列表
     items.push_back(item);
+
+    // 觸發重繪
     update();
+
+    qDebug() << "[BattleScene] 成功添加 item:" << key << "at" << item->getGridPos();
+}
+
+void BattleScene::clearItems() {
+    for (Item* item : items) {
+        removeItem(item);  // ✅ 從 scene 中移除圖示
+        item->deleteLater();       // ✅ 刪除物件
+    }
+    items.clear();         // ✅ 清空 list
 }
 
 QVector<Item*>& BattleScene::getItems() {

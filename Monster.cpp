@@ -100,7 +100,7 @@ void Monster::updateMovement() {
         if (isOnEdge(next)) {
             QRect nextBox(next.x() * 50, next.y() * 50, 50, 50);
             // 加入碰撞檢查（牆、水球）
-            if (!scene || scene->checkCollision(nextBox) || scene->hasWaterBomb(next)){
+            if (!scene || scene->checkCollisionExcludingMonsters(nextBox) || scene->hasWaterBomb(next)){
                 currentDir = nextDirection(currentDir, clockwise);
             }
             else {

@@ -1,4 +1,10 @@
 #include "Item.h"
+#include <QDebug>
+
+Item::Item(ItemType type, const QPoint& gridPos)
+    : QObject(), QGraphicsPixmapItem(), type(type), gridPos(gridPos) {
+    setPos(gridPos.x() * 50, gridPos.y() * 50);
+}
 
 QString Item::getName() const {
     switch (type) {
@@ -9,6 +15,6 @@ QString Item::getName() const {
         case ItemType::Glove:       return "Glove";
         case ItemType::MoonWalk:    return "MoonWalk";
         case ItemType::PowerPotion:     return "PowerPotion";
-        default:                    return "UnknownItem";
+        default:                    return "Turtle";
     }
 }

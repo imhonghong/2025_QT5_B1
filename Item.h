@@ -1,6 +1,10 @@
 #pragma once
-#include <QString>
+#include <QObject>
+#include <QGraphicsPixmapItem>
 #include <QPoint>
+#include <QString>
+#include "SpriteSheetManager.h"
+
 
 enum class ItemType {
     Needle,
@@ -12,13 +16,13 @@ enum class ItemType {
     PowerPotion
 };
 
-class Item {
+class Item : public QObject, public QGraphicsPixmapItem {
+    Q_OBJECT
 public:
-    Item(ItemType type, const QPoint& gridPos)
-        : type(type), gridPos(gridPos) {}
+    Item(ItemType type, const QPoint& gridPos);
 
     ItemType getType() const { return type; }
-    QString getName() const;  // 取得文字名稱，對應圖片名稱
+    QString getName() const;
     QPoint getGridPos() const { return gridPos; }
     QPoint getScreenPos() const { return QPoint(gridPos.x() * 50, gridPos.y() * 50); }
 

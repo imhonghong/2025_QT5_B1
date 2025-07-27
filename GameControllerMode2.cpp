@@ -81,6 +81,7 @@ void GameControllerMode2::checkWaveCleared() {
     }
 
     if (allDead) {
+        qDebug() << "[GameControllerMode2] wave" << currentWave << " cleared";
         ++currentWave;
         if (currentWave < 3) {
             loadWave(currentWave);
@@ -172,14 +173,14 @@ QPoint GameControllerMode2::initWave1() {
 
     QRect roamZone1(2, 2, 7, 5);
     QRect roamZone2(0, 0, 11, 9);
-    Monster* m1 = new Monster(QPoint(0, 4), roamZone1, true);
-    Monster* m2 = new Monster(QPoint(0, 4), roamZone1, true);
-    Monster* m3 = new Monster(QPoint(8, 4), roamZone1, false);
-    Monster* m4 = new Monster(QPoint(8, 4), roamZone1, false);
-    Monster* m5 = new Monster(QPoint(10, 0), roamZone2, true);
-    Monster* m6 =new Monster(QPoint(10, 0), roamZone2, true);
-    Monster* m7 = new Monster(QPoint(4, 0), roamZone2, false);
-    Monster* m8 = new Monster(QPoint(4, 0), roamZone2, false);
+    Monster* m1 = new Monster(QPoint(2, 2), roamZone1, true);
+    Monster* m2 = new Monster(QPoint(2, 6), roamZone1, true);
+    Monster* m3 = new Monster(QPoint(8, 2), roamZone1, false);
+    Monster* m4 = new Monster(QPoint(8, 6), roamZone1, false);
+    Monster* m5 = new Monster(QPoint(0, 0), roamZone2, true);
+    Monster* m6 = new Monster(QPoint(10, 0), roamZone2, true);
+    Monster* m7 = new Monster(QPoint(0, 8), roamZone2, false);
+    Monster* m8 = new Monster(QPoint(10, 8), roamZone2, false);
     scene->addMonster(m1);  monsters.push_back(m1);
     scene->addMonster(m2);  monsters.push_back(m2);
     scene->addMonster(m3);  monsters.push_back(m3);
@@ -190,5 +191,32 @@ QPoint GameControllerMode2::initWave1() {
     scene->addMonster(m8);  monsters.push_back(m8);
 
 
-    return QPoint(5, 8); // player 起始位置
+    return QPoint(5, 4); // player 起始位置
+}
+
+void GameControllerMode2::clearPlayer() {
+    if (player) {
+        scene->removeItem(player);
+        delete player;
+        player = nullptr;
+    }
+}
+
+void GameControllerMode2::clearItems() {
+    scene->clearItems();  // 如果有，否則請遍歷清除 items
+}
+
+void GameControllerMode2::nextWave() {
+    int prevHp = player ? player->getHp() : 3;
+
+    qDebug() << "[GameControllerMode2] 進入下一關";
+    currentWave++;
+
+    clearMonsters();
+    clearPlayer();
+    clearItems();
+
+    loadWave(currentWave);
+    if (player)
+        player->setHp(prevHp);
 }

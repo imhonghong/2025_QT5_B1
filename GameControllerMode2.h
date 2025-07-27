@@ -18,6 +18,10 @@ public:
     void reset() override;
     void setScene(BattleScene* s);
 
+    void nextWave();       // wave0 → wave1
+    void clearPlayer();    // 安全刪除 player
+    void clearItems();     // 安全刪除 item（或交由 scene 處理）
+
 
 private:
     BattleScene* scene = nullptr;
@@ -32,5 +36,6 @@ private:
     QVector<QVector<int>> map;
     QPoint initWave0();
     QPoint initWave1();
+    QPoint initWave2();
 
 };

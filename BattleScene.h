@@ -36,7 +36,10 @@ public:
     void addBrick(const QPoint& pos, int type);
     void removeItem(QObject* item);
     void clearScene();
+    void clearItems(); // 清除場上的所有 Item
     bool checkCollision(const QRect& box) const;
+    bool checkCollisionExcludingMonsters(const QRect& box) const;
+
     void addWaterBomb(QPoint gridPos, Player* owner);  // for Player
     void addWaterBomb(QPoint gridPos, Player* owner, int range);
     bool hasWaterBomb(const QPoint& gridPos) const;
