@@ -25,6 +25,7 @@ public:
     bool isExpired() const;
 
 private:
+    int range = 1;
     QPoint center;
     BattleScene* scene;
     QVector<ExplosionFlame> flames;

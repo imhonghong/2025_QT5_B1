@@ -4,18 +4,14 @@
 #include <QDebug>
 
 WaterBomb::WaterBomb(QPoint pos, QObject* parent)
-    : QObject(parent), gridPos(pos) {
-    timer.start();
-}
-
-WaterBomb::WaterBomb(QPoint gridPos, BattleScene* scene, Player* owner)
-    : QObject(scene), gridPos(gridPos), owner(owner) {
+    : QObject(parent), gridPos(pos), range(1) {  // ← 預設 range = 1
     timer.start();
 }
 
 WaterBomb::WaterBomb(QPoint gridPos, BattleScene* scene, Player* owner, int range)
-    : QObject(scene), gridPos(gridPos), owner(owner), range(range) {
+    : QObject(scene), gridPos(gridPos), owner(owner), range(range) {  // ← 正確接收 range
     timer.start();
+    qDebug() << "[WaterBomb] 建立水球 at" << gridPos << "range=" << range;
 }
 
 

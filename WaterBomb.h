@@ -11,7 +11,6 @@ class WaterBomb : public QObject {
     Q_OBJECT
 public:
     WaterBomb(QPoint gridPos, QObject* parent = nullptr);
-    WaterBomb(QPoint gridPos, BattleScene* scene, Player* owner);
     WaterBomb(QPoint gridPos, BattleScene* scene, Player* owner, int range);
 
     QPoint getGridPos() const;
@@ -39,5 +38,5 @@ private:
 
     Player* owner;
     bool playerHasLeft = false;
-    int range = 3;
+    int range = 1;
 };

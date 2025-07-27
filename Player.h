@@ -41,9 +41,11 @@ public:
 
     void enterTrappedState();
     int getNeedleCount() const { return needleCount; }
+    int getBombRange() const { return 1+powerPotionCount; }
     void tryUseNeedle();                // 使用針戳破水球
     void tryPlaceWaterBomb();           //放水球
     void tryPushBrick(Direction dir);   //推磚塊
+    void tryUseGlove();
 
     void onTrappedTimeout();        // 倒數三秒後觸發
     void onTurtleBreak();
@@ -82,6 +84,10 @@ private:
     int needleCount = 0;
     int powerPotionCount = 0;
     int currentWaveIndex = 0; // 新增
+    int gloveCount = 0;
+    bool hasGlove = false;
+    QTimer* moonwalkTimer = nullptr;
+    bool moonwalkActive = false;
 
     // 漂浮倒數計時
     QTimer* trappedTimer = nullptr;

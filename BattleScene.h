@@ -40,8 +40,8 @@ public:
     bool checkCollision(const QRect& box) const;
     bool checkCollisionExcludingMonsters(const QRect& box) const;
 
-    void addWaterBomb(QPoint gridPos, Player* owner);  // for Player
-    void addWaterBomb(QPoint gridPos, Player* owner, int range);
+    // void addWaterBomb(QPoint gridPos, Player* owner);  // for Player
+    void addWaterBomb(QPoint gridPos, Player* owner, int range, bool isGlove);
     bool hasWaterBomb(const QPoint& gridPos) const;
     int getWaterBombCount(Player* owner) const;
 

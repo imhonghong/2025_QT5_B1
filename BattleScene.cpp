@@ -111,30 +111,38 @@ void BattleScene::addWaterBomb(WaterBomb* bomb) {
     update();
 }
 
-void BattleScene::addWaterBomb(QPoint gridPos, Player* owner) {
-    WaterBomb* bomb = new WaterBomb(gridPos, this, owner);
+
+void BattleScene::addWaterBomb(QPoint gridPos, Player* owner, int range, bool isGlove) {
+    if (!isGlove) {
+        for (WaterBomb* bomb : waterBombs) {
+            if (bomb->getGridPos() == gridPos) {
+                qDebug() << "[BattleScene] 該格已有水球，無法放置";
+                return;
+            }
+        }
+    }
+
+    int tile = getMap(gridPos);
+    if (tile == 1 || tile == 2) {
+        qDebug() << "[BattleScene] 該格為牆或磚，無法放置";
+        return;
+    }
+
+    // ✅ 修正：使用傳入的 range 參數
+    auto* bomb = new WaterBomb(gridPos, this, owner, range);
     waterBombs.append(bomb);
 
-    qDebug() << "[BattleScene] Add WaterBomb at" << gridPos;
-
+    // ✅ 修正：在 lambda 中捕獲 bomb 並使用其 range
     connect(bomb, &WaterBomb::exploded, this, [=](QPoint center){
-        qDebug() << "[BattleScene] Bomb exploded at" << center;
-        explosions.append(new Explosion(center, this));
+        qDebug() << "[BattleScene] Bomb exploded at" << center << "with range" << bomb->getRange();
+        explosions.append(new Explosion(center, this, bomb->getRange()));  // ← 使用正確的 range
     });
 
     update();
+    qDebug() << "[BattleScene] 放置水球於:" << gridPos << " range=" << range;
 }
 
-void BattleScene::addWaterBomb(QPoint gridPos, Player* owner, int range) {
-    WaterBomb* bomb = new WaterBomb(gridPos, this, owner, range);
-    waterBombs.append(bomb);
 
-    connect(bomb, &WaterBomb::exploded, this, [=](QPoint center){
-        explosions.append(new Explosion(center, this, range));
-    });
-
-    update();
-}
 
 bool BattleScene::hasWaterBomb(const QPoint& gridPos) const {
     for (WaterBomb* b : waterBombs) {
@@ -441,9 +449,13 @@ void BattleScene::keyPressEvent(QKeyEvent* event) {
     case Qt::Key_Right:
         player->addMoveKey(Direction::Right);
         break;
-    case Qt::Key_Space:
-        qDebug() << "[Scene] 按下 Space 鍵";
-        player->tryPlaceWaterBomb();  // ✅ 呼叫放水球
+    case Qt::Key_Space:{
+           if (player->hasItem(ItemType::Glove)) {
+               player->tryUseGlove();  // 使用手套邏輯
+           } else {
+               player->tryPlaceWaterBomb();  // 一般放置水球
+           }
+        }
         break;
 
     case Qt::Key_Shift:

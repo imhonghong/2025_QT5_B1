@@ -9,7 +9,7 @@ inline QPoint gridToScreen(const QPoint& gridPos) {
 }
 
 Explosion::Explosion(QPoint center, BattleScene* scene, int range)
-    : center(center), scene(scene) {
+    : QObject(scene), center(center), scene(scene), range(range) {
     timer.start();
     generateFlames(range);
     applyEffects();

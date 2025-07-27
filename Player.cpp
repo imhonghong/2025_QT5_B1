@@ -229,10 +229,13 @@ void Player::addItem(ItemType item) {
             needleCount++;
             qDebug() << "[Player] 拾取 Needle, 總數=" << needleCount;
             break;
-        case ItemType::ExtraBomb:{
-            // ++extraBombCount;
-            ++maxWaterBombs;  // ✅ 增加上限
-            qDebug() << "[Player] 撿到 ExtraBomb，最大水球數變為:" << maxWaterBombs;
+    case ItemType::ExtraBomb: {
+            if (maxWaterBombs < 5) {
+                ++maxWaterBombs;
+                qDebug() << "[Player] 撿到 ExtraBomb，最大水球數變為:" << maxWaterBombs;
+            } else {
+                qDebug() << "[Player] 已達水球數上限，不再增加";
+            }
             break;
         }
         case ItemType::SpeedShoes:{
@@ -248,12 +251,42 @@ void Player::addItem(ItemType item) {
             break;
         }
         case ItemType::Glove:
+            if (!hasGlove) {
+                hasGlove = true;
+                gloveCount = 3;
+                itemSet.insert(item);
+                qDebug() << "[Player] 拾取 Glove";
+            } else {
+                qDebug() << "[Player] 已有 Glove，略過刷新";
+            }
+            break;
         case ItemType::MoonWalk:
+            if (moonwalkActive) {
+                qDebug() << "[Player] MoonWalk 仍在作用中，忽略拾取";
+                return;
+            }
+
+            moonwalkActive = true;
+            itemSet.insert(item);
+            qDebug() << "[Player] 拾取 MoonWalk，啟動計時";
+
+            if (!moonwalkTimer) {
+                moonwalkTimer = new QTimer(this);
+                moonwalkTimer->setSingleShot(true);
+                connect(moonwalkTimer, &QTimer::timeout, this, [this]() {
+                    moonwalkActive = false;
+                    removeItem(ItemType::MoonWalk);
+                    qDebug() << "[Player] MoonWalk 效果結束";
+                });
+            }
+            moonwalkTimer->start(10000); // 10 秒
+            break;
         case ItemType::PowerPotion:
             powerPotionCount++;
             itemSet.insert(item);
             qDebug() << "[Player] 拾取 " << static_cast<int>(item) << "(特殊道具)";
             break;
+
         default:
             qWarning() << "[Player] 未知道具";
             break;
@@ -415,13 +448,56 @@ void Player::tryPlaceWaterBomb() {
     }
 
     int range = 1 + powerPotionCount;
-    if (range > 5) range = 5;
 
-    scene->addWaterBomb(gridPos, this, range);
+    scene->addWaterBomb(gridPos, this, range, false);
+    qDebug() << "[player:tryPlaceBomb] range=" << range;
     increaseCurrentWaterBombs();  // 放置後增加數量
 
     qDebug() << "[Player] 放置炸彈成功，當前數量:"
              << getCurrentWaterBombs() << "/上限:" << getMaxWaterBombs();
+}
+
+void Player::tryUseGlove() {
+    if (!hasGlove || gloveCount <= 0 || !scene) return;
+
+    // 根據方向決定 offset
+    QPoint dirOffset;
+    switch (getDirection()) {
+        case Direction::Up:    dirOffset = QPoint(0, -1); break;
+        case Direction::Down:  dirOffset = QPoint(0, 1); break;
+        case Direction::Left:  dirOffset = QPoint(-1, 0); break;
+        case Direction::Right: dirOffset = QPoint(1, 0); break;
+        default: return;
+    }
+
+    QPoint from = getNearestGridPos();
+    QPoint landing = from + dirOffset * 2; // 丟到第2格
+    const int mapW = 11, mapH = 9;
+
+    // wrap-around 處理
+    landing.setX((landing.x() + mapW) % mapW);
+    landing.setY((landing.y() + mapH) % mapH);
+
+    // 若是磚塊就繼續 bounce
+    while (scene->getMap(landing) == 1) {
+        landing += dirOffset;
+        landing.setX((landing.x() + mapW) % mapW);
+        landing.setY((landing.y() + mapH) % mapH);
+    }
+
+    int range = 1 + powerPotionCount;
+
+    qDebug() << "[Player] 使用 Glove 丟水球，落點:" << landing;
+    qDebug() << "[player:tryUseGlove] range=" << range;
+
+    scene->addWaterBomb(landing, this, range, true); // 第四個參數是 isGlove = true
+    gloveCount--;
+
+    if (gloveCount <= 0) {
+        hasGlove = false;
+        removeItem(ItemType::Glove);  // 可加可不加（視你想不想 UI 顯示）
+        qDebug() << "[Player] Glove 用盡";
+    }
 }
 
 
