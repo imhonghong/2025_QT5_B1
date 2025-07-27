@@ -445,6 +445,13 @@ void BattleScene::keyPressEvent(QKeyEvent* event) {
         qDebug() << "[Scene] 按下 Space 鍵";
         player->tryPlaceWaterBomb();  // ✅ 呼叫放水球
         break;
+
+    case Qt::Key_Shift:
+        if (player->getIsTrapped()) {
+            player->tryUseNeedle();
+            return; // 防止再觸發方向鍵
+            }
+    break;
     }
 }
 

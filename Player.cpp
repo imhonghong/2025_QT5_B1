@@ -166,41 +166,60 @@ void Player::enterTrappedState() {
 }
 
 
-void Player::tryRescue() {
-    if (state != PlayerState::Trapped) return;
+void Player::tryUseNeedle() {
+    if (state != PlayerState::Trapped || needleCount <= 0) return;
+
+    qDebug() << "[Player] 使用針戳破水球！";
     trappedTimer->stop();
-    state = PlayerState::Standing; // 或依據當時是否騎 Turtle 調整
-    qDebug() << "[Player] 被救出！不扣血";
+    if (trappedAnimTimer) {
+        trappedAnimTimer->stop();
+        delete trappedAnimTimer;
+        trappedAnimTimer = nullptr;
+        trappedTimer->stop();
+        delete trappedTimer;
+        trappedTimer = nullptr;
+    }
+
+    needleCount--;
+    removeItem(ItemType::Needle);
+    setStateStanding();
+
+    // 無敵兩秒
+    invincible = true;
+    invincibleFrameCounter = 0;
+
+    if (!invincibleTimer) {
+        invincibleTimer = new QTimer(this);
+        invincibleTimer->setSingleShot(true);
+        connect(invincibleTimer, &QTimer::timeout, this, [this]() {
+            invincible = false;
+            qDebug() << "[Player] 無敵結束 (使用針)";
+        });
+    }
+    invincibleTimer->start(2000);
 }
+
 
 void Player::onTrappedTimeout() {
     qDebug() << "[Player] Trapped time up!";
 
-    if (hasItem(ItemType::Needle)) {
-        needleCount--;
-        removeItem(ItemType::Needle);
-        setStateStanding();
-    } else {
-        // 播 P_wd_1 / 2 共 0.5 秒再 respawn
-        state = PlayerState::Dead;
-        recoverFrameCount = 0;
+    state = PlayerState::Dead;
+    recoverFrameCount = 0;
 
-        if (recoverTimer) {
-            recoverTimer->stop();
-            delete recoverTimer;
-        }
-        recoverTimer = new QTimer(this);
-        connect(recoverTimer, &QTimer::timeout, this, [=]() {
-            if (++recoverFrameCount >= 2) {
-                recoverTimer->stop();
-                takeDamage(1);
-                setGridPos(getStartPos(0));
-                qDebug() <<"[Player]onTrappedTimeout() startGridPos" <<startGridPos;
-                setStateStanding();
-            }
-        });
-        recoverTimer->start(250); // 兩張共0.5秒
+    if (recoverTimer) {
+        recoverTimer->stop();
+        delete recoverTimer;
     }
+    recoverTimer = new QTimer(this);
+    connect(recoverTimer, &QTimer::timeout, this, [=]() {
+        if (++recoverFrameCount >= 2) {
+            recoverTimer->stop();
+            takeDamage(1);
+            qDebug() <<"[Player]onTrappedTimeout() startGridPos" <<startGridPos;
+            setStateStanding();
+        }
+    });
+    recoverTimer->start(250); // 兩張共0.5秒
 }
 
 

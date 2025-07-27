@@ -41,7 +41,7 @@ public:
 
     void enterTrappedState();
     int getNeedleCount() const { return needleCount; }
-    void tryRescue();               // 使用針戳破水球
+    void tryUseNeedle();               // 使用針戳破水球
 
     void tryPlaceWaterBomb();       //放水球
     void onTrappedTimeout();        // 倒數三秒後觸發
