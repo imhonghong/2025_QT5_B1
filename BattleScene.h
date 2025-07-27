@@ -48,6 +48,10 @@ public:
     void addItem(Item* item);  // 新增
     QVector<Item*>& getItems(); // 讓 player 檢查
 
+    // ----- 可推磚 ----- //
+    bool tryPushBrick(const QRect& playerBox, Direction dir);
+    // ----- 可推磚 ----- //
+
     // mode1+2
     GameMode getMode() const { return mode; }
     void setMode(GameMode m){ mode = m; }

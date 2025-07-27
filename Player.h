@@ -41,9 +41,10 @@ public:
 
     void enterTrappedState();
     int getNeedleCount() const { return needleCount; }
-    void tryUseNeedle();               // 使用針戳破水球
+    void tryUseNeedle();                // 使用針戳破水球
+    void tryPlaceWaterBomb();           //放水球
+    void tryPushBrick(Direction dir);   //推磚塊
 
-    void tryPlaceWaterBomb();       //放水球
     void onTrappedTimeout();        // 倒數三秒後觸發
     void onTurtleBreak();
     bool getIsTrapped() const { return state == PlayerState::Trapped; }

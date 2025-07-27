@@ -52,7 +52,7 @@ void Player::update(float delta) {
 
     // 檢查是否碰撞（以 offset 為基礎）
     QRect newBox = getCollisionBox().translated(offset.toPoint());
-    if (!scene->checkCollision(newBox)) {
+    if (!scene->checkCollision(newBox) || scene->tryPushBrick(getCollisionBox(), currentMoveDir)) {
         screenPos += offset;
 
         // 地圖邊界
@@ -487,4 +487,41 @@ void Player::setGridAlignedScreenPos(QPoint gridPos) {
     int x = gridPos.x() * 50;
     int y = gridPos.y() * 50 + 50 - displayHeight;
     screenPos = QPointF(x, y);
+}
+
+void Player::tryPushBrick(Direction dir) {
+    if (!scene) return;
+
+    QPoint currentGrid = getNearestGridPos();
+    QPoint dirOffset;
+    switch (dir) {
+        case Direction::Up:    dirOffset = QPoint(0, -1); break;
+        case Direction::Down:  dirOffset = QPoint(0,  1); break;
+        case Direction::Left:  dirOffset = QPoint(-1, 0); break;
+        case Direction::Right: dirOffset = QPoint( 1, 0); break;
+        default: return;
+    }
+
+    QPoint target = currentGrid + dirOffset;
+    QPoint behindTarget = target + dirOffset;
+
+    // 若 target 為可推磚，且 behindTarget 是空的
+    if (scene->getMap(target) == 1 && scene->getMap(behindTarget) == 0) {
+        QRect behindRect(behindTarget.x() * 50, behindTarget.y() * 50, 50, 50);
+
+        if (!scene->checkCollision(behindRect)) {
+            // ✅ 更新地圖資訊
+            scene->setMap(target, 0);         // 原本位置清空
+            scene->setMap(behindTarget, 1);   // 新位置設為磚塊
+
+            // ✅ 同時將 player 向該方向移動
+            QPointF stepOffset(dirOffset.x() * 50.0, dirOffset.y() * 50.0);
+            screenPos += stepOffset;
+
+            qDebug() << "[Player] 推磚成功，方向:" << static_cast<int>(dir);
+            return;
+        }
+    }
+
+    qDebug() << "[Player] 推磚失敗，前方:" << target << "後方:" << behindTarget;
 }

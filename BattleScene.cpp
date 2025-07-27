@@ -553,3 +553,37 @@ void BattleScene::clearItems() {
 QVector<Item*>& BattleScene::getItems() {
     return items;
 }
+
+bool BattleScene::tryPushBrick(const QRect& playerBox, Direction dir) {
+    QPoint dirOffset;
+    switch (dir) {
+        case Direction::Up: dirOffset = QPoint(0, -1); break;
+        case Direction::Down: dirOffset = QPoint(0, 1); break;
+        case Direction::Left: dirOffset = QPoint(-1, 0); break;
+        case Direction::Right: dirOffset = QPoint(1, 0); break;
+        default: return false;
+    }
+
+    // 取得碰撞框中心對應的格子
+    QPoint center = playerBox.center() / 50;
+    QPoint target = center + dirOffset;
+    QPoint behind = target + dirOffset;
+
+    // 檢查是否為可推磚
+    if (getMap(target) != 1)
+        return false;
+
+    // 後方必須是空格
+    if (getMap(behind) != 0)
+        return false;
+
+    QRect behindBox(behind * 50, QSize(50, 50));
+    if (checkCollision(behindBox))
+        return false;
+
+    // ✅ 推動成功：更新 mapData 並觸發更新
+    setMap(target, 0);
+    setMap(behind, 1);
+    update();  // 重繪畫面
+    return true;
+}
