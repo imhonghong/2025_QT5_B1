@@ -29,20 +29,24 @@ bool WaterBomb::getHasExploded() const {
 
 void WaterBomb::explode() {
     if (!hasExploded) {
+        qDebug() << "[WB] if (!hasexploded)";
         hasExploded = true;
         emit exploded(gridPos);
-        qDebug() << "[WaterBomb] 被連鎖引爆 at" << gridPos;
+        if (owner) {
+            qDebug() << "[WaterBomb] 有 owner，開始呼叫 decreaseCurrentWaterBombs()";
+            owner->decreaseCurrentWaterBombs();
+        } else {
+            qDebug() << "[WaterBomb] 沒有 owner，無法通知玩家";
+        }
     }
 }
-
 void WaterBomb::tick() {
     if (hasExploded) return;
 
     qint64 elapsed = timer.elapsed();
 
     if (elapsed >= 3000) {
-        hasExploded = true;
-        emit exploded(gridPos);
+        explode();
         qDebug() << "[WaterBomb] 💥爆炸於" << gridPos;
     } else {
         currentFrame = 1 + (elapsed / 800) % 4; // 換動畫 WB_1~4

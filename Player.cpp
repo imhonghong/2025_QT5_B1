@@ -8,8 +8,8 @@
 
 Player::Player() {
     maxHp = 3;
-    currentWaterBombs = 0;
-    maxWaterBombs = 1;
+    setCurrentWaterBombs(0);
+    setMaxWaterBombs(1);
 }
 
 void Player::setController(IGameController* ctrl) {
@@ -200,10 +200,12 @@ void Player::addItem(ItemType item) {
             needleCount++;
             qDebug() << "[Player] 拾取 Needle, 總數=" << needleCount;
             break;
-        case ItemType::ExtraBomb:
-            extraBombCount++;
-            qDebug() << "[Player] 拾取 ExtraBomb, 最大數=" << extraBombCount;
+        case ItemType::ExtraBomb:{
+            // ++extraBombCount;
+            ++maxWaterBombs;  // ✅ 增加上限
+            qDebug() << "[Player] 撿到 ExtraBomb，最大水球數變為:" << maxWaterBombs;
             break;
+        }
         case ItemType::SpeedShoes:{
            itemSet.insert(item);
             updateMoveSpeed();
@@ -367,40 +369,37 @@ QPoint Player::getNearestGridPos() const {
 }
 
 void Player::tryPlaceWaterBomb() {
-    if (!scene) {
-        qDebug() << "[Player] scene is nullptr";
-        return;
-    }
-
-    int maxBombs = 1 + extraBombCount;
-    int current = scene->getWaterBombCount(this);
+    if (!scene) return;
+    qDebug() << "[Player] 檢查炸彈狀態 current/max:" << currentWaterBombs << "/" << maxWaterBombs;
 
     QPoint gridPos = getNearestGridPos();
     int tile = scene->getMap(gridPos);
 
-    int range = 1 + (hasItem(ItemType::PowerPotion) ? powerPotionCount : 0);
-    if (range > 5) range = 5;
-    scene->addWaterBomb(gridPos, this, range);
-
-    qDebug() << "[Player] 試圖放炸彈: gridPos=" << gridPos
-             << "tile=" << tile << " bomb=" << current << "/" << maxBombs;
-
     if (tile == 1 || tile == 2) {
-        qDebug() << "[Player] 格子為牆或磚";
+        qDebug() << "[Player] 該格為牆或磚，無法放置";
         return;
     }
+
     if (scene->hasWaterBomb(gridPos)) {
         qDebug() << "[Player] 該格已有水球";
         return;
     }
-    if (current >= maxBombs) {
-        qDebug() << "[Player] 已達水球上限";
+
+    if (!canPlaceBomb()) {
+        qDebug() << "[Player] 已達最大水球數量上限";
         return;
     }
 
-    scene->addWaterBomb(gridPos, this);
-    qDebug() << "[Player] 放置炸彈成功";
+    int range = 1 + powerPotionCount;
+    if (range > 5) range = 5;
+
+    scene->addWaterBomb(gridPos, this, range);
+    increaseCurrentWaterBombs();  // 放置後增加數量
+
+    qDebug() << "[Player] 放置炸彈成功，當前數量:"
+             << getCurrentWaterBombs() << "/上限:" << getMaxWaterBombs();
 }
+
 
 QPoint Player::getStartPos(int waveIndex){
     if (waveIndex == 0){

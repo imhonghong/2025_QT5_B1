@@ -42,6 +42,7 @@ public:
     void enterTrappedState();
     int getNeedleCount() const { return needleCount; }
     void tryRescue();               // 使用針戳破水球
+
     void tryPlaceWaterBomb();       //放水球
     void onTrappedTimeout();        // 倒數三秒後觸發
     void onTurtleBreak();
@@ -75,7 +76,6 @@ private:
 
     int maxHp = 3;
     int needleCount = 0;
-    int extraBombCount = 0;
     int powerPotionCount = 0;
 
     // 漂浮倒數計時
