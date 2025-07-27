@@ -232,6 +232,8 @@ void BattleScene::clearScene() {
         robot = nullptr;
     }
 
+    clearItems();
+    update();
     // 清除地圖
     if (!mapData.isEmpty() && !mapData[0].isEmpty()) {
         int rows = mapData.size();
