@@ -103,6 +103,7 @@ void GameControllerMode2::setScene(BattleScene* s) {
 
 QPoint GameControllerMode2::initWave0() {
     currentWave = 0;
+    player->setWaveIndex(currentWave);
 
     QVector<QVector<int>> mapData = {
         {0,0,0,0,0,0,0,0,0,0,0},
@@ -154,6 +155,7 @@ QPoint GameControllerMode2::initWave0() {
 
 QPoint GameControllerMode2::initWave1() {
     currentWave = 1;
+    player->setWaveIndex(currentWave);
 
     QVector<QVector<int>> mapData = {
         {0,0,0,0,0,0,0,0,0,0,0},

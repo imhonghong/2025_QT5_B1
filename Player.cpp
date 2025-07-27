@@ -63,16 +63,19 @@ void Player::update(float delta) {
         int maxY = (mapHeight - 1) * 50;
 
         if (hasItem(ItemType::MoonWalk)) {
-            if (newBox.bottom() <= 0) {
-                // 超出上邊界 -> 從畫面下方出來
-                screenPos.setY((mapHeight - 1) * 50 + displayHeight - 46);
-            } else if (newBox.top() >= mapHeight * 50) {
-                // 超出下邊界 -> 從畫面上方出來
-                screenPos.setY(-displayHeight + 46);
+            QRect box = getCollisionBox(); // ✅ 取得目前碰撞框
+
+            if (box.right() <= 0) {
+                screenPos.setX((mapWidth - 1) * 50); // 從右邊出現
+            } else if (box.left() >= mapWidth * 50) {
+                screenPos.setX(0); // 從左邊出現
             }
 
-            if (screenPos.y() < 0) screenPos.setY((mapHeight - 1) * 50);
-            else if (screenPos.y() >= mapHeight * 50) screenPos.setY(0);
+            if (box.bottom() <= 0) {
+                screenPos.setY((mapHeight - 1) * 50 + displayHeight - 46); // 從下邊出現
+            } else if (box.top() >= mapHeight * 50) {
+                screenPos.setY(-displayHeight + 46); // 從上邊出現
+            }
         } else {  // 沒有 MoonWalk 時，限制邊界
             screenPos.setX(qBound(0.0, screenPos.x(), (mapWidth - 1) * 50.0));
             screenPos.setY(qBound(static_cast<double>(minY), screenPos.y(), static_cast<double>(maxY)));
@@ -272,10 +275,12 @@ void Player::takeDamage(int dmg) {
         connect(invincibleTimer, &QTimer::timeout, this, [this]() {
             invincible = false;
             qDebug() << "[Player] 無敵結束";
+            setGridAlignedScreenPos(getStartPos(currentWaveIndex));  // 使用已存的 waveIndex
         });
     }
     invincibleTimer->start(2000);
 }
+
 
 
 void Player::onDie() {
@@ -335,15 +340,7 @@ QRect Player::getCollisionBox() const {
     }
 
     // 假設顯示時是寬度 50 等比縮放
-    int displayWidth = 50;
-    int displayHeight;
-    // ✅ 如果是烏龜狀態，向上修正碰撞框
-    if (state == PlayerState::TurtleStanding || state == PlayerState::TurtleWalking) {
-        displayHeight = 79;  // 視實際圖片而定，可微調
-    } else {
-        displayHeight = 56;
-    }
-
+    int displayHeight = (hasItem(ItemType::Turtle))? 79 : 56 ;
     QPointF pos = getScreenPos(); // 螢幕座標
 
     // 回傳圖片下半部作為碰撞區域
@@ -409,11 +406,12 @@ void Player::tryPlaceWaterBomb() {
 }
 
 
-QPoint Player::getStartPos(int waveIndex){
-    if (waveIndex == 0){
+QPoint Player::getStartPos(int currentWaveIndex){
+    if (currentWaveIndex == 0){
         return QPoint(5,8);
-    } else if (waveIndex == 1){
-        return QPoint(5,8);
+
+    } else if (currentWaveIndex == 1){
+        return QPoint(5,4);
     }
     else{
         return QPoint(0,0);
@@ -437,8 +435,8 @@ void Player::updateMoveSpeed() {
 void Player::onTurtleBreak() {
     removeItem(ItemType::Turtle);
     updateMoveSpeed();
-    setGridAlignedScreenPos(getNearestGridPos());
     setStateStanding();
+    setGridAlignedScreenPos(getNearestGridPos());
 
     // 開啟無敵
     invincible = true;
@@ -450,6 +448,7 @@ void Player::onTurtleBreak() {
         connect(invincibleTimer, &QTimer::timeout, this, [this]() {
             invincible = false;
             qDebug() << "[Player] 無敵結束 (來自 turtle)";
+            setGridAlignedScreenPos(getStartPos(currentWaveIndex));
         });
     }
     invincibleTimer->start(2000);
@@ -459,7 +458,7 @@ void Player::onTurtleBreak() {
 void Player::setGridAlignedScreenPos(QPoint gridPos) {
     QString key = getFrameKey();
     QPixmap sprite = SpriteSheetManager::instance().getFrame(key);
-    int displayHeight = hasItem(ItemType::Turtle)?79:56; // 預設
+    int displayHeight = hasItem(ItemType::Turtle)? 79 : 56; // 預設
 
     if (!sprite.isNull()) {
         int displayWidth = 50;

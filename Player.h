@@ -54,6 +54,7 @@ public:
     void removeItem(ItemType item) { itemSet.remove(item); }
 
     void takeDamage(int dmg = 1) override;
+    void setWaveIndex(int index) { currentWaveIndex = index; }
     void onDie() override;
     void updateMoveSpeed();
 
@@ -79,6 +80,7 @@ private:
     int maxHp = 3;
     int needleCount = 0;
     int powerPotionCount = 0;
+    int currentWaveIndex = 0; // 新增
 
     // 漂浮倒數計時
     QTimer* trappedTimer = nullptr;
