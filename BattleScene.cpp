@@ -156,7 +156,7 @@ int BattleScene::getWaterBombCount(Player* owner) const {
 void BattleScene::addPlayer(Player* p, const QPoint& pos) {
     if (p) {
         p->setScene(this);  // 傳給 player battleScene
-        p->setGridPos(pos);
+        p->setGridAlignedScreenPos(pos);
         qDebug() << "[BattleScene] add player at" << pos;
         update();
     }
@@ -296,11 +296,11 @@ void BattleScene::paintPlayer(QPainter& painter, SpriteSheetManager& sheet) {
 
     if (playerImg.isNull()) {
         painter.setBrush(Qt::red);
-        painter.drawEllipse(QRect(pos.x(), pos.y(), 50, 50));
+        painter.drawEllipse(QRect(pos.x(), pos.y(), 46, 46));
         return;
     }
 
-    QRect drawRect(pos.x(), pos.y() - (playerImg.height() - 50), 50, playerImg.height());
+    QRect drawRect(pos.x(), pos.y(), 50, playerImg.height());
     painter.drawPixmap(drawRect, playerImg);
 
     // 顯示碰撞框

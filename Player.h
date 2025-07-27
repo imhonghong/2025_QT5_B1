@@ -65,6 +65,8 @@ public:
 
     bool isInvincible() const { return invincible; }
 
+    void setGridAlignedScreenPos(QPoint gridPos); // 新增宣告
+
 
 signals:
     void requestEndGame(bool isWin);

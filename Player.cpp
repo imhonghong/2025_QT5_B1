@@ -58,17 +58,24 @@ void Player::update(float delta) {
         // 地圖邊界
         constexpr int mapWidth = 11;
         constexpr int mapHeight = 9;
+        int displayHeight = (hasItem(ItemType::Turtle)) ? 79 : 56;
+        int minY = -displayHeight + 46;  // ✅ 圖片最上緣可以超出地圖
+        int maxY = (mapHeight - 1) * 50;
 
         if (hasItem(ItemType::MoonWalk)) {
-            if (screenPos.x() < 0) screenPos.setX((mapWidth - 1) * 50);
-            else if (screenPos.x() >= mapWidth * 50) screenPos.setX(0);
+            if (newBox.bottom() <= 0) {
+                // 超出上邊界 -> 從畫面下方出來
+                screenPos.setY((mapHeight - 1) * 50 + displayHeight - 46);
+            } else if (newBox.top() >= mapHeight * 50) {
+                // 超出下邊界 -> 從畫面上方出來
+                screenPos.setY(-displayHeight + 46);
+            }
 
             if (screenPos.y() < 0) screenPos.setY((mapHeight - 1) * 50);
             else if (screenPos.y() >= mapHeight * 50) screenPos.setY(0);
-        } else {
-            // 沒有 MoonWalk 時，限制邊界
+        } else {  // 沒有 MoonWalk 時，限制邊界
             screenPos.setX(qBound(0.0, screenPos.x(), (mapWidth - 1) * 50.0));
-            screenPos.setY(qBound(0.0, screenPos.y(), (mapHeight - 1) * 50.0));
+            screenPos.setY(qBound(static_cast<double>(minY), screenPos.y(), static_cast<double>(maxY)));
         }
 
         // ✅ 成功移動後決定狀態
@@ -329,7 +336,13 @@ QRect Player::getCollisionBox() const {
 
     // 假設顯示時是寬度 50 等比縮放
     int displayWidth = 50;
-    int displayHeight = sprite.height() * displayWidth / sprite.width();
+    int displayHeight;
+    // ✅ 如果是烏龜狀態，向上修正碰撞框
+    if (state == PlayerState::TurtleStanding || state == PlayerState::TurtleWalking) {
+        displayHeight = 79;  // 視實際圖片而定，可微調
+    } else {
+        displayHeight = 56;
+    }
 
     QPointF pos = getScreenPos(); // 螢幕座標
 
@@ -337,12 +350,7 @@ QRect Player::getCollisionBox() const {
     int baseX = pos.x();
     int baseY = pos.y() + displayHeight - 46;
 
-    // ✅ 如果是烏龜狀態，向上修正碰撞框
-    if (state == PlayerState::TurtleStanding || state == PlayerState::TurtleWalking) {
-        baseY -= 30;  // 視實際圖片而定，可微調
-    }
-
-    return QRect(baseX, baseY, 46, 46);
+    return QRect(baseX+2, baseY, 46, 46);
 }
 
 void Player::setScene(BattleScene *s){
@@ -429,6 +437,7 @@ void Player::updateMoveSpeed() {
 void Player::onTurtleBreak() {
     removeItem(ItemType::Turtle);
     updateMoveSpeed();
+    setGridAlignedScreenPos(getNearestGridPos());
     setStateStanding();
 
     // 開啟無敵
@@ -445,4 +454,19 @@ void Player::onTurtleBreak() {
     }
     invincibleTimer->start(2000);
     qDebug() << "[Player] onTurtleBreak: 移除 turtle + 進入無敵";
+}
+
+void Player::setGridAlignedScreenPos(QPoint gridPos) {
+    QString key = getFrameKey();
+    QPixmap sprite = SpriteSheetManager::instance().getFrame(key);
+    int displayHeight = hasItem(ItemType::Turtle)?79:56; // 預設
+
+    if (!sprite.isNull()) {
+        int displayWidth = 50;
+        displayHeight = sprite.height() * displayWidth / sprite.width();
+    }
+
+    int x = gridPos.x() * 50;
+    int y = gridPos.y() * 50 + 50 - displayHeight;
+    screenPos = QPointF(x, y);
 }
