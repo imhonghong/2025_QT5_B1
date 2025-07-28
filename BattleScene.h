@@ -31,9 +31,11 @@ public:
     Player* getPlayer() const {
         return controller ? controller->getPlayer() : nullptr;
     }
+    Octopus* getOctopus() const { return octopus; }
     void addMonster(Monster* monster);
     void addPlayer(Player* p, const QPoint& pos);
     void addBrick(const QPoint& pos, int type);
+    void addOctopus(Octopus* o);
     void removeItem(QObject* item);
     void clearScene();
     void clearItems(); // 清除場上的所有 Item
@@ -89,7 +91,7 @@ private:
     Robot* robot = nullptr;
     IGameController* controller = nullptr;
     QVector<Monster*> monsters;
-    QVector<Octopus*> octopi;
+    Octopus* octopus = nullptr;
     QVector<Item*> items;
 
     // bombs
@@ -105,6 +107,7 @@ private:
     void paintMap(QPainter& painter, SpriteSheetManager& sheet, int cellSize);
     void paintPlayer(QPainter& painter, SpriteSheetManager& sheet);
     void paintMonsters(QPainter& painter);
+    void paintOctopus(QPainter& painter);
     void paintWaterBombs(QPainter& painter);
     void paintExplosions(QPainter& painter);
     void paintRobot(QPainter& painter);

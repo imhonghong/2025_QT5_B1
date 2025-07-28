@@ -509,7 +509,7 @@ QPoint Player::getStartPos(int currentWaveIndex){
         return QPoint(5,4);
     }
     else{
-        return QPoint(0,0);
+        return QPoint(5, 7);
     }
 }
 

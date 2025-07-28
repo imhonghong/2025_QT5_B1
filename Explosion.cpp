@@ -76,7 +76,7 @@ void Explosion::applyEffects() {
     Player* player = scene->getPlayer();              // mode2
     Robot* robot = scene->getRobot();                 // mode1
     const QVector<Monster*>& monsters = scene->getMonsters();
-    const QVector<Octopus*>& octopi = scene->getOctopi();
+    Octopus* octopus = scene->getOctopus();
 
     if (hasAppliedEffect) return;
     hasAppliedEffect = true;
@@ -134,14 +134,13 @@ void Explosion::applyEffects() {
                 }
             }
             // 🎯 Octopi
-            for (Octopus* o : octopi) {
-                if (o && o->getCollisionBox().intersects(flameRect)) {
-                    qDebug() << "[Explosion] Octopus 被炸死 at" << p;
-                    // 之後可呼叫 o->hit()
-                }
+            if (octopus && octopus->getCollisionBox().intersects(flameRect)) {
+                qDebug() << "[Explosion] Octopus 被炸死 at" << p;
+                // 之後可呼叫 o->hit()
             }
+
             // 若是磚塊 → 爆破
-            if (scene->getMap(p) == 1) {
+            if (scene->getMap(p) == 1 || scene->getMap(p) == 2) {
                 scene->setMap(p, 0);
                 if (scene->getMode() == GameMode::Mode2){
                     int r = QRandomGenerator::global()->bounded(7);

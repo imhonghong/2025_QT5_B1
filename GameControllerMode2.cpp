@@ -9,7 +9,7 @@ void GameControllerMode2::initialize(BattleScene* s) {
         monsters.removeAll(m);  // ✅ 防止使用到 deleted monster
     });
 
-    loadWave(0);
+    loadWave(2);
     connect(player, &Player::requestEndGame, scene, &BattleScene::gameEnded);
 }
 
@@ -63,7 +63,7 @@ void GameControllerMode2::loadWave(int waveIndex) {
     switch (waveIndex) {
         case 0: playerStart = initWave0(); break;
         case 1: playerStart = initWave1(); break;
-        // case 2: playerStart = initWave2(); break;
+        case 2: playerStart = initWave2(); break;
     }
 
     scene->addPlayer(player, playerStart);
@@ -194,6 +194,38 @@ QPoint GameControllerMode2::initWave1() {
 
 
     return QPoint(5, 4); // player 起始位置
+}
+
+QPoint GameControllerMode2::initWave2() {
+    currentWave = 2;
+    player->setWaveIndex(currentWave);
+
+    QVector<QVector<int>> mapData = {
+        {7,0,2,0,0,0,0,0,2,0,7},
+        {0,2,0,2,0,0,0,2,0,2,0},
+        {2,0,0,0,0,0,0,0,0,0,2},
+        {0,2,0,0,0,0,0,0,0,2,0},
+        {2,0,0,0,0,0,0,0,0,0,2},
+        {0,2,0,0,0,0,0,0,0,2,0},
+        {2,0,0,0,0,0,0,0,0,0,2},
+        {0,2,0,2,0,0,0,2,0,2,0},
+        {6,0,2,0,2,0,2,0,2,0,6},
+    };
+    scene->setMap(mapData);
+
+    // scene->addBrick(QPoint(3, 1), 1);
+    // scene->addBrick(QPoint(7, 1), 1);
+
+    //add octopus
+    Octopus* o = new Octopus();
+    scene->addOctopus(o);
+
+    QRect roamZone1(2, 2, 7, 5);
+    Monster* m1 = new Monster(QPoint(2, 2), roamZone1, true);
+    Monster* m2 = new Monster(QPoint(2, 6), roamZone1, true);
+    scene->addMonster(m1);  monsters.push_back(m1);
+    scene->addMonster(m2);  monsters.push_back(m2);
+    return QPoint(5, 7); // player 起始位置
 }
 
 void GameControllerMode2::clearPlayer() {

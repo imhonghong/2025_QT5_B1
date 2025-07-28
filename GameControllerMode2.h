@@ -28,7 +28,7 @@ private:
     BattleScene* scene = nullptr;
     Player* player = nullptr;
     QVector<Monster*> monsters;
-    int currentWave = 0;
+    int currentWave = 2;
 
     void loadWave(int waveIndex);  // 載入地圖、怪物、玩家
     void clearMonsters();

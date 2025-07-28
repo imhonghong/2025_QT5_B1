@@ -86,6 +86,7 @@ void BattleScene::paintEvent(QPaintEvent*) {
     paintMonsters(painter);     // ✅ 畫出 monster
     paintRobot(painter);        // ✅ 畫出 robot
     paintItems(painter);
+    paintOctopus(painter);
     paintWaterBombs(painter);   // ✅ 畫出水球
     paintExplosions(painter);   // ✅ 畫出水球爆炸
     paintUI(painter);
@@ -99,6 +100,11 @@ void BattleScene::addMonster(Monster* m) {
     m->setScene(this);
     connect(m, &Monster::requestDelete, this, &BattleScene::removeItem);
     update();
+}
+
+void BattleScene::addOctopus(Octopus* o) {
+    octopus = o;
+    octopus->setGridPos(QPoint(4, 1)); // 範例座標，可自訂
 }
 
 void BattleScene::addWaterBomb(WaterBomb* bomb) {
@@ -190,9 +196,6 @@ const QVector<Monster*>& BattleScene::getMonsters() const {
     return monsters;
 }
 
-const QVector<Octopus*>& BattleScene::getOctopi() const {
-    return octopi;
-}
 
 void BattleScene::removeItem(QObject* item) {
     if (!item) return;
@@ -201,8 +204,6 @@ void BattleScene::removeItem(QObject* item) {
     if (Monster* m = qobject_cast<Monster*>(item)) {
         monsters.removeAll(m);
         emit monsterRemoved(m);
-    } else if (Octopus* o = qobject_cast<Octopus*>(item)) {
-        octopi.removeAll(o);
     }
 
     item->deleteLater();  // 安全移除
@@ -216,9 +217,9 @@ void BattleScene::clearScene() {
         removeItem(m);
     monsters.clear();
 
-    for (Octopus* o : octopi)
-        delete o;
-    octopi.clear();
+    Octopus* o = getOctopus();
+    delete o;
+
 
     // 清除水球與爆炸
     for (WaterBomb* b : waterBombs)
@@ -251,6 +252,7 @@ void BattleScene::clearScene() {
 }
 
 void BattleScene::paintMap(QPainter& painter, SpriteSheetManager& sheet, int cellSize) {
+    int a = 0;
     for (int y = 0; y < mapData.size(); ++y) {
         for (int x = 0; x < mapData[y].size(); ++x) {
             int type = mapData[y][x];
@@ -261,7 +263,8 @@ void BattleScene::paintMap(QPainter& painter, SpriteSheetManager& sheet, int cel
                 case 0: frameKey = "brick_0"; break;
                 case 1: frameKey = "brick_1"; break;
                 case 2: frameKey = "brick_2"; break;
-                case 3: frameKey = ((x + y) % 2 == 0) ? "brick_3_0" : "brick_3_1"; break;
+                case 3: { frameKey = ((a) % 2 == 0) ? "brick_3_0" : "brick_3_1";
+                    a++; } break;
                 case 6: frameKey = "brick_6"; break;
                 case 7: frameKey = "brick_7"; break;
                 default: frameKey = "brick_0"; break;
@@ -269,9 +272,14 @@ void BattleScene::paintMap(QPainter& painter, SpriteSheetManager& sheet, int cel
 
             QPixmap sprite = sheet.getFrame(frameKey);
             if (!sprite.isNull()) {
-                painter.drawPixmap(rect, sprite);
-            } else {
-                painter.fillRect(rect, Qt::gray);
+                if (type == 6){
+                    int drawX = x * 50;
+                    int drawY = y * 50 + 50 - sprite.height();  // 下緣對齊
+                    painter.drawPixmap(drawX, drawY, sprite);
+                }
+                else {
+                    painter.drawPixmap(rect, sprite);
+                }
             }
         }
     }
@@ -325,6 +333,11 @@ void BattleScene::paintMonsters(QPainter& painter){
         QPixmap sprite = SpriteSheetManager::instance().getFrame(m->getFrameKey());
         painter.drawPixmap(QRect(m->getScreenPos().toPoint(), QSize(50, 50)), sprite);
     }
+}
+void BattleScene::paintOctopus(QPainter& painter) {
+    if (!octopus || octopus->isDead()) return;
+    QPixmap pixmap = SpriteSheetManager::instance().getFrame(octopus->getFrameKey());
+    painter.drawPixmap(octopus->getScreenPos(), pixmap);
 }
 void BattleScene::paintWaterBombs(QPainter& painter){
     for (int i = waterBombs.size() - 1; i >= 0; --i) {
@@ -484,14 +497,18 @@ bool BattleScene::checkCollision(const QRect& box) const {
     }
 
     for (int y = 0; y < mapData.size(); ++y) {
-        for (int x = 0; x < mapData[y].size(); ++x) {
-            int type = mapData[y][x];
-            if (type == 1 || type == 2 || type == 3 || type == 6 || type == 7) { // 不可穿越磚
-                QRect brickBox(x * 50, y * 50, 50, 50);
-                if (box.intersects(brickBox)) return true;
+            for (int x = 0; x < mapData[y].size(); ++x) {
+                int type = mapData[y][x];
+                if (type == 1 || type == 2 || type == 3 || type == 7) { // 不可穿越磚
+                    QRect brickBox(x * 50, y * 50, 50, 50);
+                    if (box.intersects(brickBox)) return true;
+                }
+                if( type == 6){
+                    QRect brickBox(x * 50, y * 50-101+50, 50, 50);
+                    if (box.intersects(brickBox)) return true;
+                }
             }
         }
-    }
 
     // 檢查是否撞到未爆炸的水球
     Player* player = getPlayer(); // 對 Mode2 有效
