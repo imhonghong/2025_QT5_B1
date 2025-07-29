@@ -105,7 +105,7 @@ void Robot::advanceStep() {
         }
         case RobotAction::PlaceBomb: {
             if (scene) {
-                WaterBomb* bomb = new WaterBomb(current.pos);
+                WaterBomb* bomb = new WaterBomb(current.pos, scene, nullptr, 1);
                 scene->addWaterBomb(bomb);
                 qDebug() << "Place Bomb at: " << current.pos;
                 isMoving = false;

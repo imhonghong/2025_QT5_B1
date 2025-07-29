@@ -11,9 +11,6 @@ void GameControllerMode1::initialize(BattleScene* scene) {
 
     reset();
     this->scene = scene;
-    scene->setPlayer(player);  // 這行很關鍵！
-    scene->bindPlayerForMode1(player);
-    player->setController(this);
 
     map = MapLoader::loadMap(":/map/map.txt");
     scene->setMap(map);
