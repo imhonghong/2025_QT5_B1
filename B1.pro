@@ -18,6 +18,7 @@ SOURCES += \
     MapLoader.cpp \
     Monster.cpp \
     Octopus.cpp \
+    OctopusBall.cpp \
     PathFinder.cpp \
     Player.cpp \
     Robot.cpp \
@@ -30,6 +31,7 @@ SOURCES += \
 HEADERS += \
     BattleScene.h \
     Character.h \
+    Direction.h \
     EndingScene.h \
     Explosion.h \
     GameControllerMode1.h \
@@ -42,6 +44,7 @@ HEADERS += \
     MapLoader.h \
     Monster.h \
     Octopus.h \
+    OctopusBall.h \
     PathFinder.h \
     Player.h \
     Robot.h \

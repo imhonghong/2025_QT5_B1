@@ -11,8 +11,6 @@
 class BattleScene;
 class IGameController;
 
-
-
 enum class PlayerState {
     Standing,
     Walking,
@@ -70,6 +68,7 @@ public:
     bool isInvincible() const { return invincible; }
 
     void setGridAlignedScreenPos(QPoint gridPos); // 新增宣告
+    QPoint getNearestGridPos() const; //放水球整數點、章魚追蹤
 
 
 signals:
@@ -102,7 +101,7 @@ private:
     int moveSpeed = 75;                         // 預設速度
     QSet<Direction> activeKeys;                 // 正在按的方向鍵
 
-    QPoint getNearestGridPos() const; //放水球整數點
+
 
     QTimer* invincibleTimer = nullptr;
     bool invincible = false;

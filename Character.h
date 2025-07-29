@@ -6,13 +6,7 @@
 #include <QSize>
 #include <QPixmap>
 #include "SpriteSheetManager.h"
-
-enum class Direction {
-    Down,
-    Left,
-    Right,
-    Up
-};
+#include "Direction.h"
 
 class Character {
 public:

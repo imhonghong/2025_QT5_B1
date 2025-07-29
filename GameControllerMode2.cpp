@@ -37,6 +37,38 @@ void GameControllerMode2::update(float delta) {
         }
     // 可加上時間控制等
     }
+    // ✅ 加上 Octopus 判定
+    Octopus* o = scene->getOctopus();
+    if (o && !o->isDead()) {
+        QRect box = o->getCollisionBox();
+        QPoint grid = o->getGridPos();
+
+        // 1️⃣ 碰到磚塊
+        int tile = scene->getMap(grid);
+        if (tile == 1 || tile == 2) {
+            scene->setMap(grid, 0);
+            qDebug() << "[Octopus] Destroyed tile at" << grid;
+        }
+
+        // 2️⃣ 碰到 item
+        QVector<Item*>& items = scene->getItems();
+        for (int i = items.size() - 1; i >= 0; --i) {
+            Item* item = items[i];
+            QRect itemBox(item->getScreenPos(), QSize(50, 50));
+            if (item && itemBox.intersects(box)) {
+                scene->removeItem(item);
+                // qDebug() << "[Octopus] Ate item:" << item;
+            }
+        }
+
+        // 3️⃣ 碰到 player
+        if (!player->isDead() && box.intersects(player->getCollisionBox())) {
+            player->takeDamage(1);
+            qDebug() << "[Octopus] Hit player!";
+        }
+    }
+
+    scene->updateOctoBall();
 }
 
 void GameControllerMode2::clearMonsters() {
@@ -71,12 +103,21 @@ void GameControllerMode2::loadWave(int waveIndex) {
 
 
 void GameControllerMode2::checkWaveCleared() {
-    // 所有怪物死亡 → 進入下一波
     bool allDead = true;
+
+    // 判斷 monster 是否全滅
     for (Monster* m : monsters) {
         if (!m->isDead()) {
             allDead = false;
             break;
+        }
+    }
+
+    // 判斷 octopus 是否死亡（僅 wave2 才有）
+    if (currentWave == 2) {
+        Octopus* o = scene->getOctopus();
+        if (o && !o->isDead()) {
+            allDead = false;
         }
     }
 
@@ -91,6 +132,7 @@ void GameControllerMode2::checkWaveCleared() {
         }
     }
 }
+
 
 void GameControllerMode2::setScene(BattleScene* s) {
     scene = s;
@@ -196,6 +238,7 @@ QPoint GameControllerMode2::initWave1() {
     return QPoint(5, 4); // player 起始位置
 }
 
+
 QPoint GameControllerMode2::initWave2() {
     currentWave = 2;
     player->setWaveIndex(currentWave);
@@ -213,19 +256,15 @@ QPoint GameControllerMode2::initWave2() {
     };
     scene->setMap(mapData);
 
-    // scene->addBrick(QPoint(3, 1), 1);
-    // scene->addBrick(QPoint(7, 1), 1);
-
-    //add octopus
+    // ✅ 創建章魚但先不加到場景
     Octopus* o = new Octopus();
-    scene->addOctopus(o);
 
-    QRect roamZone1(2, 2, 7, 5);
-    Monster* m1 = new Monster(QPoint(2, 2), roamZone1, true);
-    Monster* m2 = new Monster(QPoint(2, 6), roamZone1, true);
-    scene->addMonster(m1);  monsters.push_back(m1);
-    scene->addMonster(m2);  monsters.push_back(m2);
-    return QPoint(5, 7); // player 起始位置
+    // ✅ 先設定 player，再加入章魚
+    scene->addPlayer(player, QPoint(5, 7));  // 提前設定 player
+    o->setPlayer(player);  // 直接設定 player 給章魚
+    scene->addOctopus(o);  // 再加入章魚
+
+    return QPoint(5, 7); // player 起始位置（已經設定過了）
 }
 
 void GameControllerMode2::clearPlayer() {

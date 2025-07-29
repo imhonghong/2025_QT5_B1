@@ -135,7 +135,8 @@ void Explosion::applyEffects() {
             }
             // 🎯 Octopi
             if (octopus && octopus->getCollisionBox().intersects(flameRect)) {
-                qDebug() << "[Explosion] Octopus 被炸死 at" << p;
+                octopus->takeDamage(1);
+                qDebug() << "[Explosion] Octopus take 1 damage";
                 // 之後可呼叫 o->hit()
             }
 

@@ -126,7 +126,6 @@ void Player::update(float delta) {
     }
 
     if (invincible) invincibleFrameCounter++;
-    // qDebug() << "[Player::update] 移動中: state=" << static_cast<int>(state) << " pos=" << screenPos;
 }
 
 void Player::setStateStanding() {
@@ -562,6 +561,7 @@ void Player::setGridAlignedScreenPos(QPoint gridPos) {
 
     int x = gridPos.x() * 50;
     int y = gridPos.y() * 50 + 50 - displayHeight;
+    gridPos = QPoint(x, y);
     screenPos = QPointF(x, y);
 }
 

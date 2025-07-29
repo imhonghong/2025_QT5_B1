@@ -17,6 +17,7 @@ public:
     void update(float delta) override;
 
     Player* getPlayer() const override;
+    void setPlayer(Player* p) override { player = p; }
     QVector<Robot*> getRobots() const override;
     GameMode getMode() const override;
 

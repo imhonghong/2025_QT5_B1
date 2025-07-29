@@ -17,6 +17,7 @@ public:
     GameMode getMode() const override { return GameMode::Mode2; }
     void reset() override;
     void setScene(BattleScene* s);
+    void setPlayer(Player* p) override { player = p; }
     int getCurrentWave() const { return currentWave; }
 
     void nextWave();       // wave0 → wave1

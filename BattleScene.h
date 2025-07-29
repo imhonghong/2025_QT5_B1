@@ -15,6 +15,7 @@
 #include "WaterBomb.h"
 #include "Explosion.h"
 #include "Item.h"
+#include "OctopusBall.h"
 
 class BattleScene : public QWidget {
     Q_OBJECT
@@ -46,6 +47,17 @@ public:
     void addWaterBomb(QPoint gridPos, Player* owner, int range, bool isGlove);
     bool hasWaterBomb(const QPoint& gridPos) const;
     int getWaterBombCount(Player* owner) const;
+
+    // ----- for octopus ----- //
+    void addOctopusBall(OctopusBall* ball);
+    void onOctopusBallExplode(OctopusBall* ball);
+    void removeOctopusBall(OctopusBall* ball);
+    bool isInsideMap(QPoint pos) const;
+    QPoint getOctopusGridPos() const {
+        return octopus ? octopus->getGridPos() : QPoint(-1, -1);
+    }
+    void updateOctoBall();
+    // ----- for octopus ----- //
 
     void addItem(Item* item);  // 新增
     QVector<Item*>& getItems(); // 讓 player 檢查
@@ -97,6 +109,7 @@ private:
     // bombs
     QVector<WaterBomb*> waterBombs;
     QVector<Explosion*> explosions;
+    QVector<OctopusBall*> octopusBalls;
 
     QTimer updateTimer;
 
@@ -109,6 +122,7 @@ private:
     void paintMonsters(QPainter& painter);
     void paintOctopus(QPainter& painter);
     void paintWaterBombs(QPainter& painter);
+    void paintOctopusBall(QPainter& painter);
     void paintExplosions(QPainter& painter);
     void paintRobot(QPainter& painter);
     void paintItems(QPainter& painter);

@@ -58,6 +58,7 @@ void BattleScene::setController(IGameController* c) {
         if (!isPaused && controller) {
             controller->update(0.016f);
             update();
+            updateOctoBall();
         }
     });
     setFocus();
@@ -88,6 +89,7 @@ void BattleScene::paintEvent(QPaintEvent*) {
     paintItems(painter);
     paintOctopus(painter);
     paintWaterBombs(painter);   // ✅ 畫出水球
+    paintOctopusBall(painter);
     paintExplosions(painter);   // ✅ 畫出水球爆炸
     paintUI(painter);
 
@@ -102,11 +104,22 @@ void BattleScene::addMonster(Monster* m) {
     update();
 }
 
+
 void BattleScene::addOctopus(Octopus* o) {
     octopus = o;
-    octopus->setGridPos(QPoint(4, 1)); // 範例座標，可自訂
-}
+    octopus->setParent(this);
+    octopus->setScene(this);
+    octopus->setGridPos(QPoint(4, 0));
 
+    // ✅ 如果已經有 player，就直接設定給章魚
+    Player* currentPlayer = getPlayer();
+    if (currentPlayer) {
+        octopus->setPlayer(currentPlayer);
+        qDebug() << "[BattleScene] Octopus got player at:" << currentPlayer->getGridPos();
+    } else {
+        qDebug() << "[BattleScene] Warning: Player not found when adding octopus";
+    }
+}
 void BattleScene::addWaterBomb(WaterBomb* bomb) {
     waterBombs.append(bomb);
     qDebug() << "[BattleScene] Add WaterBomb at" << bomb->getGridPos(); // ✅ 加上
@@ -171,6 +184,13 @@ void BattleScene::addPlayer(Player* p, const QPoint& pos) {
     if (p) {
         p->setScene(this);  // 傳給 player battleScene
         p->setGridAlignedScreenPos(pos);
+        if (controller && controller->getMode() == GameMode::Mode2) {
+            // ⭐ 將 Player 傳給 Controller
+            controller->setPlayer(p);
+        }
+        if (octopus) {
+            octopus->setPlayer(p); // ✅ 將 player 傳給 octopus
+        }
         qDebug() << "[BattleScene] add player at" << pos;
         update();
     }
@@ -338,6 +358,10 @@ void BattleScene::paintOctopus(QPainter& painter) {
     if (!octopus || octopus->isDead()) return;
     QPixmap pixmap = SpriteSheetManager::instance().getFrame(octopus->getFrameKey());
     painter.drawPixmap(octopus->getScreenPos(), pixmap);
+
+    QRect box = octopus->getCollisionBox();
+    painter.setPen(QPen(Qt::green, 2));  // 綠色描框
+    painter.drawRect(box);
 }
 void BattleScene::paintWaterBombs(QPainter& painter){
     for (int i = waterBombs.size() - 1; i >= 0; --i) {
@@ -351,6 +375,16 @@ void BattleScene::paintWaterBombs(QPainter& painter){
         QPixmap pix = b->getCurrentPixmap();
         QPointF pos = QPointF(b->getGridPos().x() * 50, b->getGridPos().y() * 50);
         painter.drawPixmap(QRect(pos.x(), pos.y(), 50, 50), pix);
+    }
+}
+void BattleScene::paintOctopusBall(QPainter &painter){
+    for (OctopusBall* ball : octopusBalls) {
+        if (!ball->isTimeUp()) {
+            QRect rect = ball->getBoundingBox();
+            QPixmap pix = ball->getCurrentPixmap();
+            if (!pix.isNull())
+                painter.drawPixmap(rect, pix);
+        }
     }
 }
 void BattleScene::paintExplosions(QPainter& painter){
@@ -615,4 +649,42 @@ bool BattleScene::tryPushBrick(const QRect& playerBox, Direction dir) {
     setMap(behind, 1);
     update();  // 重繪畫面
     return true;
+}
+
+void BattleScene::addOctopusBall(OctopusBall* ball) {
+    octopusBalls.append(ball);
+    connect(ball, &OctopusBall::requestExplosion, this, &BattleScene::onOctopusBallExplode);
+}
+
+void BattleScene::removeOctopusBall(OctopusBall* ball) {
+    octopusBalls.removeOne(ball);
+    removeItem(ball);
+}
+
+bool BattleScene::isInsideMap(QPoint pos) const {
+    return pos.x() >= 0 && pos.x() < 11 && pos.y() >= 0 && pos.y() < 9;
+}
+
+void BattleScene::onOctopusBallExplode(OctopusBall* ball) {
+    QPoint pos = ball->getGridPos();
+    Explosion* explosion = new Explosion(pos, this, 11);  // ✅ 使用 this 傳入 scene、range=11
+    explosions.append(explosion);
+
+    // 清除 octopusBall
+    octopusBalls.removeOne(ball);
+    ball->deleteLater();
+}
+
+
+void BattleScene::updateOctoBall() {
+
+    if (octopus && !octopus->isDead()) {
+        octopus->updateAI();  // ★ 呼叫 AI 移動
+    }
+    // 讓每顆 octopusBall 自己 tick
+    for (OctopusBall* ball : octopusBalls) {
+        if (ball) {
+            ball->tick();
+        }
+    }
 }
