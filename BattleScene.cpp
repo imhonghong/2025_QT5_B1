@@ -50,19 +50,38 @@ void BattleScene::setRobot(Robot* r) {
 }
 
 void BattleScene::setController(IGameController* c) {
-    if (controller) delete controller;
-    controller = c;
-    if (controller) controller->initialize(this);
+    // ✅ 1. 先停止並斷開舊的計時器連接
+    if (updateTimer.isActive()) {
+        updateTimer.stop();
+    }
+    disconnect(&updateTimer, nullptr, this, nullptr);  // 斷開所有來自 updateTimer 的連接
 
-    connect(&updateTimer, &QTimer::timeout, this, [=](){
-        if (!isPaused && controller) {
-            controller->update(0.016f);
-            update();
-            updateOctoBall();
-        }
-    });
-    setFocus();
-    updateTimer.start(16);  // 每 16ms 執行一次
+    // ✅ 2. 刪除舊的 controller
+    if (controller) {
+        delete controller;
+        controller = nullptr;
+    }
+
+    // ✅ 3. 設定新的 controller
+    controller = c;
+    if (controller) {
+        controller->initialize(this);
+    }
+
+    // ✅ 4. 重新建立計時器連接並啟動
+    if (controller) {
+        connect(&updateTimer, &QTimer::timeout, this, [=](){
+            if (!isPaused && controller) {
+                controller->update(0.016f);
+                update();
+                updateOctoBall();
+            }
+        });
+
+        setFocus();
+        updateTimer.start(16);  // 每 16ms 執行一次
+        qDebug() << "[BattleScene] Timer started with new controller";
+    }
 }
 
 void BattleScene::bindPlayerForMode1(Player* p) {
@@ -180,6 +199,12 @@ int BattleScene::getWaterBombCount(Player* owner) const {
     return count;
 }
 
+void BattleScene::handleGameEnd(bool isWin) {
+    updateTimer.stop();
+    disconnect(&updateTimer, nullptr, nullptr, nullptr);
+    emit gameEnded(isWin);
+}
+
 void BattleScene::addPlayer(Player* p, const QPoint& pos) {
     if (p) {
         p->setScene(this);  // 傳給 player battleScene
@@ -232,43 +257,72 @@ void BattleScene::removeItem(QObject* item) {
 
 
 void BattleScene::clearScene() {
-    // 清除怪物與章魚
-    for (Monster* m : monsters)
-        removeItem(m);
-    monsters.clear();
+    qDebug() << "[BattleScene] Clearing scene...";
 
-    Octopus* o = getOctopus();
-    delete o;
-
-
-    // 清除水球與爆炸
-    for (WaterBomb* b : waterBombs)
-        delete b;
-    waterBombs.clear();
-
-    for (Explosion* e : explosions)
-        delete e;
-    explosions.clear();
-
-    // 玩家、機器人等也一併清除（如果有的話）
-    Player* p = getPlayer();
-    if (p) {
-        delete p; // 不設為 nullptr，因為你沒儲存這個指標
+    // ✅ 1. 停止計時器，避免在清理過程中觸發更新
+    if (updateTimer.isActive()) {
+        updateTimer.stop();
     }
 
+    // ✅ 2. 清除怪物
+    for (Monster* m : monsters) {
+        if (m) {
+            removeItem(m);
+        }
+    }
+    monsters.clear();
+
+    // ✅ 3. 清除章魚
+    if (octopus) {
+        delete octopus;
+        octopus = nullptr;
+    }
+
+    // ✅ 4. 清除水球
+    for (WaterBomb* b : waterBombs) {
+        if (b) {
+            delete b;
+        }
+    }
+    waterBombs.clear();
+
+    // ✅ 5. 清除爆炸效果
+    for (Explosion* e : explosions) {
+        if (e) {
+            delete e;
+        }
+    }
+    explosions.clear();
+
+    // ✅ 6. 清除章魚球
+    for (OctopusBall* ball : octopusBalls) {
+        if (ball) {
+            delete ball;
+        }
+    }
+    octopusBalls.clear();
+
+    // ✅ 7. 清除機器人
     if (robot) {
         delete robot;
         robot = nullptr;
     }
 
+    // ✅ 8. 清除道具
     clearItems();
-    update();
-    // 清除地圖
+
+    // ✅ 9. 重置地圖
     if (!mapData.isEmpty() && !mapData[0].isEmpty()) {
         int rows = mapData.size();
         int cols = mapData[0].size();
         mapData = QVector<QVector<int>>(rows, QVector<int>(cols, 0));
     }
+
+    // ✅ 10. 重置暫停狀態
+    isPaused = false;
+
+    update();
+    qDebug() << "[BattleScene] Scene cleared successfully";
 }
 
 void BattleScene::paintMap(QPainter& painter, SpriteSheetManager& sheet, int cellSize) {

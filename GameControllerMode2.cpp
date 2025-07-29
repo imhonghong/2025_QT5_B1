@@ -128,7 +128,7 @@ void GameControllerMode2::checkWaveCleared() {
             loadWave(currentWave);
         } else {
             qDebug() << "[GameControllerMode2] All waves cleared!";
-            scene->gameEnded(true);  // 勝利
+            scene->handleGameEnd(true);  // or false
         }
     }
 }

@@ -29,6 +29,7 @@ public:
     void addWaterBomb(WaterBomb* bomb); //for robot
 
     // mode2
+    QTimer updateTimer;
     Player* getPlayer() const {
         return controller ? controller->getPlayer() : nullptr;
     }
@@ -81,6 +82,7 @@ public:
     const QVector<Octopus*>& getOctopi() const;
     const QVector<WaterBomb*>& getWaterBombs() const;
     void togglePause();
+    void handleGameEnd(bool isWin);
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -111,7 +113,7 @@ private:
     QVector<Explosion*> explosions;
     QVector<OctopusBall*> octopusBalls;
 
-    QTimer updateTimer;
+
 
     //for mode1
     int stepCount = -1;

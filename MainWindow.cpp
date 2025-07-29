@@ -28,17 +28,33 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 void MainWindow::startGame(GameMode mode) {
-    if (mode == GameMode::Mode1) {
-        IGameController* controller = new GameControllerMode1();
-        battleScene->setController(controller);
-        stack->setCurrentWidget(battleScene);
-    } else {
-        IGameController* controller = new GameControllerMode2();  // ✅ 使用你剛實作的 controller
-        battleScene->setController(controller);
-        battleScene->setMode(GameMode::Mode2);
-        stack->setCurrentWidget(battleScene);
+    qDebug() << "[MainWindow] Starting game with mode:" << static_cast<int>(mode);
+
+    // ✅ 1. 徹底清除現有場景內容
+    battleScene->clearScene();
+
+    // ✅ 2. 確保計時器已停止
+    if (battleScene->updateTimer.isActive()) {
+        battleScene->updateTimer.stop();
+        qDebug() << "[MainWindow] Stopped existing timer";
     }
+
+    // ✅ 3. 建立新的 Controller
+    IGameController* controller = nullptr;
+    if (mode == GameMode::Mode1) {
+        controller = new GameControllerMode1();
+    } else {
+        controller = new GameControllerMode2();
+        battleScene->setMode(GameMode::Mode2);
+    }
+
+    // ✅ 4. 設定 controller 並切換畫面
+    battleScene->setController(controller);
+    stack->setCurrentWidget(battleScene);
+
+    qDebug() << "[MainWindow] Game started successfully";
 }
+
 
 void MainWindow::backToTitle() {
     stack->setCurrentWidget(titleScene);
