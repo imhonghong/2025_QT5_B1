@@ -9,7 +9,7 @@ void GameControllerMode2::initialize(BattleScene* s) {
         monsters.removeAll(m);  // ✅ 防止使用到 deleted monster
     });
 
-    loadWave(2);
+    loadWave(1);
     connect(player, &Player::requestEndGame, scene, &BattleScene::gameEnded);
 }
 

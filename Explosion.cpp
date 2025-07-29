@@ -61,12 +61,19 @@ void Explosion::generateFlames(int range) {
     for (const Dir& dir : directions) {
         for (int i = 1; i <= range; ++i) {
             QPoint p = center + dir.delta * i;
-            QString part = (i == range) ? "end" : "stem";  // 最遠端用 end，其餘用 stem
-            QString baseKey = QString("WB_%1_%2").arg(part, dir.name);  // 不含 frame 編號
-            // ⛔ 若該格是不可炸磚，該格不加入火焰
-            if (scene->getMap(p) == 3)  // 3 代表不可炸牆
+            int tile = scene->getMap(p);
+
+            // ⛔ 若是牆，完全無法穿透
+            if (tile == 3)
                 break;
+
+            QString part = (i == range) ? "end" : "stem";
+            QString baseKey = QString("WB_%1_%2").arg(part, dir.name);
             flames.push_back({ p, baseKey, now });
+
+            // ⛔ 若是磚，炸掉後終止延伸
+            if (tile == 1 || tile == 2)
+                break;
         }
     }
 }
@@ -85,6 +92,7 @@ void Explosion::applyEffects() {
     if (Player* p = scene->getPlayer()) {
         qDebug() << "[Explosion] applyEffects triggered";
         QRect playerBox = p->getCollisionBox();
+        bool octopusHit = false;
 
         for (const ExplosionFlame& f : flames) {
             QPoint p = f.pos;
@@ -134,10 +142,10 @@ void Explosion::applyEffects() {
                 }
             }
             // 🎯 Octopi
-            if (octopus && octopus->getCollisionBox().intersects(flameRect)) {
+            if (octopus && !octopusHit && octopus->getCollisionBox().intersects(flameRect)) {
                 octopus->takeDamage(1);
+                octopusHit = true;
                 qDebug() << "[Explosion] Octopus take 1 damage";
-                // 之後可呼叫 o->hit()
             }
 
             // 若是磚塊 → 爆破
