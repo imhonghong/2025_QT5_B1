@@ -27,6 +27,10 @@ public:
     Robot* getRobot() const;
     void setRobot(Robot* r);
     void addWaterBomb(WaterBomb* bomb); //for robot
+    void setPlayer(Player* p) {
+        player = p;
+        if (player) player->setScene(this);
+    };
 
     // mode2
     QTimer updateTimer;
@@ -101,7 +105,7 @@ private:
     QVector<QVector<int>> mapData;
 
     // characters
-    // Player* player = nullptr;
+    Player* player = nullptr;
     Robot* robot = nullptr;
     IGameController* controller = nullptr;
     QVector<Monster*> monsters;
@@ -112,8 +116,6 @@ private:
     QVector<WaterBomb*> waterBombs;
     QVector<Explosion*> explosions;
     QVector<OctopusBall*> octopusBalls;
-
-
 
     //for mode1
     int stepCount = -1;

@@ -318,6 +318,11 @@ void BattleScene::clearScene() {
         mapData = QVector<QVector<int>>(rows, QVector<int>(cols, 0));
     }
 
+    if (player) {
+        player->setScene(nullptr);  // 移除場景指標，避免 dangling
+        player = nullptr;           // 避免之後意外使用
+    }
+
     // ✅ 10. 重置暫停狀態
     isPaused = false;
 

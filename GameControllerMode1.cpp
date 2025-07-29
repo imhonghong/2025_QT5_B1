@@ -5,13 +5,15 @@
 
 GameControllerMode1::GameControllerMode1() {}
 
-GameControllerMode1::~GameControllerMode1() {
-    reset();
-}
+GameControllerMode1::~GameControllerMode1() {}
 
 void GameControllerMode1::initialize(BattleScene* scene) {
+
     reset();
     this->scene = scene;
+    scene->setPlayer(player);  // 這行很關鍵！
+    scene->bindPlayerForMode1(player);
+    player->setController(this);
 
     map = MapLoader::loadMap(":/map/map.txt");
     scene->setMap(map);
@@ -76,11 +78,7 @@ void GameControllerMode1::reset() {
     for (Robot* r : robots) delete r;
     robots.clear();
 
-    if (player) {
-        delete player;
-        player = nullptr;
-    }
-
+    player = nullptr;
     map.clear();
     scene = nullptr;
 }
