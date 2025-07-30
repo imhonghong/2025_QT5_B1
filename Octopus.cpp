@@ -81,11 +81,20 @@ void Octopus::updateAI() {
         OctopusBall* ball = new OctopusBall(getGridPos(), getDirection(), scene);
         scene->addOctopusBall(ball);
     }
+
+    for (WaterBomb* bomb : scene->getWaterBombs()) {
+        if (!bomb || bomb->getHasExploded()) continue;
+        if (bomb->getGridPos() == getGridPos()) {
+            qDebug() << "[Octopus] 碰到水球，觸發爆炸 at" << bomb->getGridPos();
+            bomb->explode();  // ✅ 主動觸發爆炸
+            return;  // ⚠️ 注意：爆炸後 Octopus 不再進行移動或攻擊
+        }
+    }
 }
 
 QRect Octopus::getCollisionBox() const {
     QPointF pos = getScreenPos();
-    return QRect(pos.x() + 10, pos.y()+10 + 8, 150-20, 200-30);  // 假設碰撞區比圖像略小
+    return QRect(pos.x() + 20, pos.y()+20, 150-40, 200-40);  // 假設碰撞區比圖像略小
 }
 
 void Octopus::onDie() {

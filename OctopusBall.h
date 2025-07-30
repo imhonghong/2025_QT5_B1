@@ -19,6 +19,8 @@ public:
     bool isTimeUp() const;
 
     void moveForward();
+    void moveAndCheck();
+    void reverseDirection();
     QPoint getGridPos() const;
     QRect getBoundingBox() const;
     QPixmap getCurrentPixmap() const;
@@ -31,6 +33,7 @@ private:
     QPoint gridPos;
     Direction direction;
     QElapsedTimer timer;
+    QElapsedTimer moveTimer;
     int currentFrame = 1;
     bool hasExploded = false;
 

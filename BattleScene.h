@@ -61,6 +61,7 @@ public:
     QPoint getOctopusGridPos() const {
         return octopus ? octopus->getGridPos() : QPoint(-1, -1);
     }
+
     void updateOctoBall();
     // ----- for octopus ----- //
 

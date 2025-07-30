@@ -52,13 +52,19 @@ void GameControllerMode2::update(float delta) {
 
         // 2️⃣ 碰到 item
         QVector<Item*>& items = scene->getItems();
-        for (int i = items.size() - 1; i >= 0; --i) {
-            Item* item = items[i];
+        QVector<Item*> toRemove;
+
+        for (Item* item : items) {
+            if (!item) continue;
             QRect itemBox(item->getScreenPos(), QSize(50, 50));
-            if (item && itemBox.intersects(box)) {
-                scene->removeItem(item);
-                // qDebug() << "[Octopus] Ate item:" << item;
+            if (itemBox.intersects(box)) {
+                toRemove.append(item);
             }
+        }
+
+        // 統一處理移除，避免 iterator 被破壞或重複刪除
+        for (Item* item : toRemove) {
+            scene->removeItem(item);
         }
 
         // 3️⃣ 碰到 player
