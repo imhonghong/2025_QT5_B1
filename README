@@ -21,6 +21,6 @@ mingw32-make
 
 ## 步驟 5：自動部署 Qt 相依 DLL(Qt 5.12.12 (MinGW 7.3.0 32-bit) Command Prompt)
 cd release
-windeployqt M2.exe
+windeployqt B1.exe
 
 ## portable version should pack "release" directory
