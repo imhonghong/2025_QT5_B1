@@ -108,7 +108,6 @@ private:
     int invincibleFrameCounter = 0;  // private 區
 
 
-
 };
 
 

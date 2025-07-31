@@ -260,9 +260,11 @@ void BattleScene::clearScene() {
     qDebug() << "[BattleScene] Clearing scene...";
 
     // ✅ 1. 停止計時器，避免在清理過程中觸發更新
+    /*
     if (updateTimer.isActive()) {
         updateTimer.stop();
     }
+    */
 
     // ✅ 2. 清除怪物
     for (Monster* m : monsters) {
